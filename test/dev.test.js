@@ -55,3 +55,17 @@ test('dev serves the logo from the project', async () => {
     await server.stop();
   }
 });
+
+test('dev can serve the bundled client scripts to the browser', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'beacon-dev-'));
+  await cp(fixture, root, { recursive: true, filter: (src) => !src.includes('/dist') });
+  const server = await dev(root, { port: await freePort() });
+  try {
+    const script = new URL('../src/site/lib/copy.js', import.meta.url).pathname;
+    const res = await fetch(`${server.url}/@fs${script}`);
+    assert.equal(res.status, 200);
+    assert.match(await res.text(), /handleCopyClick/);
+  } finally {
+    await server.stop();
+  }
+});

@@ -12,7 +12,9 @@
     "beacon": "bin/beacon.js"
   },
   "scripts": {
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "e2e": "node scripts/e2e.mjs",
+    "accept:pier": "scripts/accept-pier.sh"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.3",
@@ -24,5 +26,10 @@
   },
   "devDependencies": {
     "lighthouse": "^13.6.0"
-  }
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "packageManager": "pnpm@9.15.3"
 }

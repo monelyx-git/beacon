@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      # Budgets and Lighthouse run against the components fixture (tabs, code, search index).
+      - run: node bin/beacon.js build --root test/fixtures/components
+      - name: Budgets
+        run: |
+          node scripts/measure-budget.mjs test/fixtures/components/dist static/index.html
+          node scripts/measure-budget.mjs test/fixtures/components/dist tabs/index.html
+          node scripts/measure-budget.mjs test/fixtures/components/dist static/index.html --search-open
+      - name: Lighthouse (median of 3)
+        run: node scripts/lighthouse.mjs test/fixtures/components/dist /static/ /tabs/ --runs 3
+      - name: Browser checks
+        run: node scripts/e2e.mjs test/fixtures/components/dist

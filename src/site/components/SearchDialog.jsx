@@ -14,7 +14,8 @@ export default function SearchDialog({ base }) {
       try {
         const found = await runSearch(await loadPagefind(base), query);
         if (!stale) { setResults(found); setFailed(false); }
-      } catch {
+      } catch (err) {
+        console.error('beacon search failed:', err);
         if (!stale) setFailed(true);
       }
     }, 120);
@@ -28,7 +29,11 @@ export default function SearchDialog({ base }) {
       onClick={(e) => e.target === dialog.current && dialog.current.close()}>
       <input type="search" aria-label="Search documentation" placeholder="Search the docs" autofocus value={query}
         onInput={(e) => setQuery(e.currentTarget.value)}
-        onKeyDown={(e) => e.key === 'Enter' && results?.[0] && (location.href = results[0].url)} />
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && results?.[0]) location.href = results[0].url;
+          // type=search clears its text on the first Escape; one press should close the dialog.
+          if (e.key === 'Escape') { e.preventDefault(); dialog.current.close(); }
+        }} />
       <p class="search-status" role="status">{status}</p>
       {results?.length > 0 && (
         <ul aria-label="Results">

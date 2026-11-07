@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, rm, mkdtemp, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readFile, readdir, rm, mkdtemp, writeFile, mkdir, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -114,4 +114,13 @@ test('a configured logo is copied into dist and used in the sidebar', async () =
   await build(dir);
   assert.match(await readFile(join(dir, 'dist/brand.svg'), 'utf8'), /<svg/);
   assert.match(await readFile(join(dir, 'dist/a/index.html'), 'utf8'), /<img src="\/brand\.svg"/);
+});
+
+test('dist/pagefind keeps only the runtime we use, not Pagefind\'s bundled UIs', async () => {
+  await build(fixture);
+  const files = await readdir(join(fixture, 'dist/pagefind'));
+  for (const unused of ['pagefind-ui.js', 'pagefind-ui.css', 'pagefind-modular-ui.js', 'pagefind-modular-ui.css', 'pagefind-component-ui.js', 'pagefind-component-ui.css', 'pagefind-highlight.js']) {
+    assert.ok(!files.includes(unused), `${unused} should not ship`);
+  }
+  for (const needed of ['pagefind.js', 'pagefind-worker.js', 'pagefind-entry.json']) assert.ok(files.includes(needed), `${needed} is required`);
 });

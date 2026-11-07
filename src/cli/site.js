@@ -1,4 +1,4 @@
-import { createReadStream } from 'node:fs';
+import { accessSync, constants, createReadStream } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
@@ -57,18 +57,25 @@ const sendFile = (file, res) => createReadStream(file).on('error', () => { res.s
 
 /** Astro inline config shared by `build` and `dev`. */
 export function astroConfig(root, site, { watch = false } = {}) {
+  // shortcut: Astro writes .astro/ into its root (the package folder) and cannot move it; supporting read-only
+  // installs would mean copying the bundled site into the project cache on every build.
+  try { accessSync(pkgRoot, constants.W_OK); } catch {
+    throw new Error(`beacon: ${pkgRoot} is not writable. Astro writes generated files next to the bundled site, so install @monelyx/beacon where your user can write (for example as a devDependency of your project).`);
+  }
   const siteUrl = new URL(site.config.site);
+  const work = join(root, 'node_modules/.cache/beacon');
   return {
     root: pkgRoot,
     srcDir: join(pkgRoot, 'src/site'),
     publicDir: join(pkgRoot, 'src/site/public'),
     outDir: join(root, 'dist'),
-    cacheDir: join(root, 'node_modules/.cache/beacon'),
+    cacheDir: join(work, 'cache'),
     configFile: false,
     site: siteUrl.origin,
     base: siteUrl.pathname,
     logLevel: 'warn',
-    integrations: [mdx(), preact()],
+    // Without include/exclude the Preact transform skips files under node_modules, i.e. every installed copy of Beacon.
+    integrations: [mdx(), preact({ include: [join(pkgRoot, 'src/site/**/*.jsx')], exclude: [] })],
     vite: { plugins: [beaconModule(root, site, { watch })], logLevel: 'warn' },
   };
 }
