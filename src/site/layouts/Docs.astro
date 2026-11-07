@@ -14,6 +14,7 @@ import { wrapCodeBlocks } from '../lib/code-blocks.js';
 import { anchorHeadings } from '../lib/anchors.js';
 import { siblings, trail, withBase } from '../lib/nav.js';
 import { t } from '../lib/strings.js';
+import { mdPath } from '../../cli/content.js';
 import { editHref } from '../../cli/edit-link.js';
 import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
 
@@ -70,7 +71,10 @@ const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render
         {locales.length > 1 && <LangSwitch links={switcherLinks(pages, page, locales)} />}
       </aside>
       <main class="content" data-pagefind-body={notFound ? undefined : ''}>
-        {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
+        <div class="meta-row">
+          {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
+          {!notFound && <button type="button" class="copy-page" data-md={withBase(`/${mdPath(page.slug)}`)} data-copy={s.copyPage} data-copied={s.copied} data-failed={s.copyFailed} aria-live="polite" data-pagefind-ignore>{s.copyPage}</button>}
+        </div>
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
         {config.editUrl && page.file && <p class="edit" data-pagefind-ignore><a href={editHref(config.editUrl, contentDir, page.file)}>{s.editPage}</a></p>}
@@ -84,7 +88,7 @@ const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render
       <Toc headings={headings} label={s.toc} />
     </div>
     <script>
-      import { handleCopyClick } from '../lib/copy.js';
+      import { handleCopyClick, handlePageCopyClick } from '../lib/copy.js';
       import { toggleTheme } from '../lib/theme-toggle.js';
       import { toggleSidebar, isSidebarShortcut } from '../lib/sidebar-toggle.js';
       // Wrapper so a blocked localStorage throws inside toggleTheme's try, not at property access.
@@ -100,6 +104,7 @@ const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render
       document.addEventListener('click', (e) => {
         if (e.target.closest?.('.search-open')) openSearch();
         handleCopyClick(e, navigator.clipboard, setTimeout);
+        handlePageCopyClick(e, { fetch, clipboard: navigator.clipboard, ClipboardItem: globalThis.ClipboardItem }, setTimeout);
         if (e.target.closest?.('.theme-toggle')) toggleTheme(document, storage);
         if (e.target.closest?.('.sidebar-toggle')) toggleSidebar(document, storage);
       });

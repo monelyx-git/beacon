@@ -93,3 +93,6 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .anchor { margin-left: .4em; color: var(--muted-foreground); text-decoration: none; opacity: 0; }
 .prose :is(h2, h3, h4):hover .anchor, .anchor:focus-visible { opacity: 1; }
 .edit { margin: 2rem 0 0; font-size: .875rem; }
+.meta-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 1.75rem; }
+.copy-page { margin-left: auto; padding: .15rem .6rem; border: 1px solid var(--border); border-radius: .375rem; background: transparent; color: var(--muted-foreground); font: inherit; font-size: .8125rem; cursor: pointer; }
+.copy-page:hover { color: var(--foreground); }

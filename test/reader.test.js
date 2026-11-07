@@ -52,3 +52,8 @@ test('build writes a .md file per page', async () => {
   assert.match(await read('guide/setup.md'), /import X from "\.\/x"/);
   assert.equal((await read('own-h1.md')).match(/^# /gm).length, 1);
 });
+
+test('pages have a copy-page button pointing at their Markdown', async () => {
+  assert.match(await read('guide/intro/index.html'), /<button[^>]*class="copy-page"[^>]*data-md="\/guide\/intro\.md"[^>]*data-pagefind-ignore/);
+  assert.doesNotMatch(await read('404.html'), /copy-page/);
+});
