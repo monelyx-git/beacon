@@ -89,7 +89,7 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .sidebar nav details[open] > summary::after { transform: rotate(90deg); }
 .sidebar nav summary > * { flex: 1; }
 .pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-.pager a { display: flex; flex-direction: column; text-decoration: none; }
+.pager a { color: var(--foreground); display: flex; flex-direction: column; text-decoration: none; }
 .pager small { color: var(--muted-foreground); }
 .pager .next { align-items: flex-end; margin-left: auto; }
 .anchor { margin-left: .4em; color: var(--muted-foreground); text-decoration: none; opacity: 0; }
