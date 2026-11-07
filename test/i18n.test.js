@@ -10,7 +10,7 @@ const single = new URL('./fixtures/i18n-single/', import.meta.url).pathname;
 const warnings = [];
 const read = (root, p) => readFile(join(root, 'dist', p), 'utf8');
 const sidebar = (html) => html.match(/<nav[^>]*aria-label="(?:Documentation|Documentación)"[\s\S]*?<\/nav>/)?.[0] ?? '';
-const switcher = (html) => html.match(/<nav class="lang-switch"[\s\S]*?<\/nav>/)?.[0] ?? '';
+const switcher = (html) => html.match(/<details class="lang-switch"[\s\S]*?<\/details>/)?.[0] ?? '';
 
 before(async () => {
   const warn = console.warn;

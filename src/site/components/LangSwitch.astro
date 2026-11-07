@@ -4,8 +4,14 @@ import { t } from '../lib/strings.js';
 
 /** @type {{links: {code: string, href: string, current: boolean}[]}} */
 const { links } = Astro.props;
-const s = t(links.find((l) => l.current)?.code);
+const current = links.find((l) => l.current);
+const s = t(current?.code);
+// Each language is named in itself ("español"), so no dictionary entry per language is needed.
+const name = (code) => new Intl.DisplayNames([code], { type: 'language' }).of(code);
 ---
-<nav class="lang-switch" aria-label={s.language}>
-  {links.map((l) => <a href={withBase(l.href)} hreflang={l.code} lang={l.code} aria-current={l.current ? 'true' : undefined}>{l.code}</a>)}
-</nav>
+<details class="lang-switch">
+  <summary aria-label={`${s.language}: ${name(current.code)}`}>{name(current.code)}</summary>
+  <ul>
+    {links.map((l) => <li><a href={withBase(l.href)} hreflang={l.code} lang={l.code} aria-current={l.current ? 'true' : undefined}>{name(l.code)}</a></li>)}
+  </ul>
+</details>
