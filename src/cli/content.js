@@ -137,7 +137,7 @@ export async function scanAssets(dir) {
 }
 
 /** Where `/` should redirect when there is no root page: the first nav node with an href, depth-first. Null when `/` has a page. */
-export function rootRedirect(nav) {
+export function rootRedirect(nav, home = '/') {
   const first = (nodes) => {
     for (const n of nodes) {
       const h = n.href ?? first(n.children);
@@ -146,5 +146,5 @@ export function rootRedirect(nav) {
     return null;
   };
   const target = first(nav);
-  return target === '/' ? null : target;
+  return target === home ? null : target;
 }
