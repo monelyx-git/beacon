@@ -14,3 +14,4 @@ Working rules for agents.
 10. Never add `Co-Authored-By` trailers (or any other attribution lines) to commit messages.
 
 The design lives in `docs/superpowers/specs/`. Read it before planning or building.
+11. After every npm publish, always create the matching `vX.Y.Z` git tag and add that version's entry to `CHANGELOG.md`.
