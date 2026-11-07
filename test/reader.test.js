@@ -43,3 +43,12 @@ test('edit link points at the source file', async () => {
   assert.match(html, /href="https:\/\/github\.com\/acme\/docs\/edit\/main\/docs\/guide\/intro\.md"[^>]*>Edit this page</);
   assert.doesNotMatch(await read('404.html'), /Edit this page/);
 });
+
+test('build writes a .md file per page', async () => {
+  const intro = await read('guide/intro.md');
+  assert.ok(intro.startsWith('# Introduction\n'));
+  assert.doesNotMatch(intro, /^---/m);
+  assert.ok(await read('index.md'));
+  assert.match(await read('guide/setup.md'), /import X from "\.\/x"/);
+  assert.equal((await read('own-h1.md')).match(/^# /gm).length, 1);
+});

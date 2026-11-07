@@ -107,3 +107,18 @@ test('dev redirects / to the first page without a root index, and serves the ind
     await server.stop();
   }
 });
+
+test('dev serves /guide/intro.md as text/markdown', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'beacon-dev-'));
+  await cp(fixture, root, { recursive: true, filter: (src) => !src.includes('/dist') });
+  const server = await dev(root, { port: await freePort() });
+  try {
+    const res = await fetch(`${server.url}/guide/intro.md`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('content-type'), /^text\/markdown/);
+    assert.match(await res.text(), /^# Introduction/);
+    assert.notEqual((await fetch(`${server.url}/nope.md`)).status, 200);
+  } finally {
+    await server.stop();
+  }
+});

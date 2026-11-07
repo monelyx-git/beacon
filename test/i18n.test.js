@@ -96,3 +96,7 @@ test('content under the default language folder is rejected', async () => {
   const dir = await project({ locales: ['en', 'es'] }, { 'en/x.md': '# X\n\nHi.\n', 'es/y.md': '# Y\n\nHola.\n' });
   await assert.rejects(build(dir), /content\/en\//);
 });
+
+test('each language page is also published as Markdown', async () => {
+  assert.match(await read(multi, 'es/guide/intro.md'), /^# /);
+});

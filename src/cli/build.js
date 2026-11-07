@@ -1,6 +1,7 @@
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, relative } from 'node:path';
 import { build as astroBuild } from 'astro';
+import { mdPath, pageMarkdown } from './content.js';
 import { buildSearchIndex } from './search-index.js';
 import { astroConfig, loadSite } from './site.js';
 
@@ -19,6 +20,8 @@ export async function build(root) {
     await mkdir(dirname(dest), { recursive: true });
     await copyFile(asset, dest);
   }
+  // Every page is also published as Markdown: the copy-page button fetches it and llms.txt links to it.
+  for (const page of site.pages) await writeFile(join(config.outDir, mdPath(page.slug)), await pageMarkdown(page));
   for (const file of [site.config.logo, site.config.favicon].filter(Boolean)) await copyFile(join(root, file), join(config.outDir, basename(file)));
   return { outDir: config.outDir, pages: site.pages.length, redirect: site.redirect };
 }
