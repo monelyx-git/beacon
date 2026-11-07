@@ -12,7 +12,7 @@ import { rewriteLinks } from '../../cli/links.js';
 import { wrapCodeBlocks } from '../lib/code-blocks.js';
 import { trail, withBase } from '../lib/nav.js';
 
-const { page, headings, showTitle } = Astro.props;
+const { page, headings, showTitle, notFound = false } = Astro.props;
 const href = page.slug ? `/${page.slug}/` : '/';
 const crumbs = trail(nav, href).slice(0, -1);
 // Only override Pier's own (theme-aware) accent when the config changes it.
@@ -30,7 +30,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {notFound ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={config.title} />
     <meta property="og:title" content={heading} />
@@ -52,7 +52,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
         <button type="button" class="search-open" aria-label="Search" aria-keyshortcuts="Control+K Meta+K">Search <kbd>⌘K</kbd></button>
         <nav aria-label="Documentation"><Sidebar nodes={nav} current={href} /></nav>
       </aside>
-      <main class="content" data-pagefind-body>
+      <main class="content" data-pagefind-body={notFound ? undefined : ''}>
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
