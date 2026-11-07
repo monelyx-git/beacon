@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseLocales } from './locales.js';
 
-/** @typedef {{site: string, title: string, accent: string, logo?: string, favicon?: string, locales?: string[]}} BeaconConfig */
+/** @typedef {{site: string, title: string, accent: string, logo?: string, favicon?: string, locales?: string[], collapsibleSidebar?: true}} BeaconConfig */
 
 export const DEFAULT_ACCENT = '#d2441c';
 // Theme backgrounds from the vendored Pier tokens (light, dark).
@@ -46,5 +46,7 @@ export async function loadConfig(root) {
 
   const locales = raw.locales === undefined ? undefined : parseLocales(raw.locales);
 
-  return { site: raw.site.replace(/\/+$/, ''), title: raw.title ?? 'Docs', accent, ...(raw.logo ? { logo: raw.logo } : {}), ...(raw.favicon ? { favicon: raw.favicon } : {}), ...(locales ? { locales } : {}) };
+  if (raw.collapsibleSidebar !== undefined && typeof raw.collapsibleSidebar !== 'boolean') throw new Error('beacon.config: "collapsibleSidebar" must be true or false');
+
+  return { site: raw.site.replace(/\/+$/, ''), title: raw.title ?? 'Docs', accent, ...(raw.logo ? { logo: raw.logo } : {}), ...(raw.favicon ? { favicon: raw.favicon } : {}), ...(locales ? { locales } : {}), ...(raw.collapsibleSidebar ? { collapsibleSidebar: true } : {}) };
 }

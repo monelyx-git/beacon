@@ -51,3 +51,12 @@ test('invalid locales names the field', async () => {
 test('missing config file is a clear error', async () => {
   await assert.rejects(loadConfig(await project()), /no beacon\.config\.\(js\|mjs\|json\) found/);
 });
+
+test('collapsibleSidebar true is returned, absent by default', async () => {
+  assert.equal((await loadConfig(await project({ site: 'https://a.dev', collapsibleSidebar: true }))).collapsibleSidebar, true);
+  assert.equal('collapsibleSidebar' in (await loadConfig(await project({ site: 'https://a.dev' }))), false);
+});
+
+test('collapsibleSidebar rejects non-booleans', async () => {
+  await assert.rejects(loadConfig(await project({ site: 'https://a.dev', collapsibleSidebar: 'yes' })), /"collapsibleSidebar" must be true or false/);
+});

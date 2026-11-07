@@ -81,3 +81,8 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .search li strong { display: block; color: var(--bx-accent); }
 .search li span { font-size: .875rem; color: var(--muted-foreground); }
 .search mark { background: var(--warning-soft); color: var(--warning-soft-foreground); }
+.sidebar summary { display: flex; align-items: center; cursor: pointer; list-style: none; }
+.sidebar summary::-webkit-details-marker { display: none; }
+.sidebar summary::before { content: '▸'; flex: none; width: 1rem; color: var(--sidebar-muted); font-size: .75rem; }
+.sidebar details[open] > summary::before { content: '▾'; }
+.sidebar summary > * { flex: 1; }

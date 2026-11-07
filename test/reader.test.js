@@ -15,3 +15,11 @@ test('pages ship a sidebar toggle wired to the sidebar', async () => {
   assert.match(html, /<button[^>]*class="sidebar-toggle"[^>]*aria-controls="sidebar"[^>]*aria-expanded="true"/);
   assert.match(html, /<aside[^>]*id="sidebar"/);
 });
+
+const sidebar = (html) => html.match(/<nav[^>]*aria-label="Documentation"[\s\S]*?<\/nav>/)[0];
+
+test('collapsible groups open on the branch holding the current page', async () => {
+  const tuning = sidebar(await read('guide/advanced/tuning/index.html'));
+  assert.match(tuning, /<details open>(?:(?!<\/details>)[\s\S])*Advanced/);
+  assert.doesNotMatch(sidebar(await read('index.html')), /<details open/);
+});

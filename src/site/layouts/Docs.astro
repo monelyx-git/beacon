@@ -63,7 +63,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
           <button type="button" class="theme-toggle" aria-label={s.toggleTheme}>◐</button>
         </div>
         <button type="button" class="search-open" aria-label={s.search} aria-keyshortcuts="Control+K Meta+K">{s.search} <kbd>⌘K</kbd></button>
-        <nav aria-label={s.navLabel}><Sidebar nodes={nav} current={href} /></nav>
+        <nav aria-label={s.navLabel}><Sidebar nodes={nav} current={href} collapsible={config.collapsibleSidebar} /></nav>
         {locales.length > 1 && <LangSwitch links={switcherLinks(pages, page, locales)} />}
       </aside>
       <main class="content" data-pagefind-body={notFound ? undefined : ''}>
