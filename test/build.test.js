@@ -208,3 +208,18 @@ test('the redirect URL is HTML-attribute-escaped', async () => {
   assert.match(html, /<a href="\/p&amp;q\/a\/">/);
   assert.doesNotMatch(html, /url=\/p&q/);
 });
+
+test('build emits a 404.html with the site chrome that is noindex and out of sitemap and search', async () => {
+  const dir = await site({ 'a.md': '# A\n\nFirst page text.\n', 'b.md': '# B\n\nSecond.\n' }, 'https://x.dev/docs');
+  await build(dir);
+  const html = await readFile(join(dir, 'dist/404.html'), 'utf8');
+  assert.match(html, /<h1[^>]*>Page not found<\/h1>/);
+  assert.match(html, /<meta name="robots" content="noindex"/);
+  assert.match(html, /<nav[^>]*aria-label="Documentation"[\s\S]*href="\/docs\/a\/"/);
+  assert.match(html, /<a href="\/docs\/">/);
+  assert.doesNotMatch(html, /data-pagefind-body/);
+  assert.doesNotMatch(await readFile(join(dir, 'dist/sitemap.xml'), 'utf8'), /404/);
+  const entry = JSON.parse(await readFile(join(dir, 'dist/pagefind/pagefind-entry.json'), 'utf8'));
+  assert.equal(entry.languages.en.page_count, 2);
+  assert.doesNotMatch(await readFile(join(dir, 'dist/a/index.html'), 'utf8'), /name="robots"/);
+});
