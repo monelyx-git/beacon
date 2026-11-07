@@ -13,6 +13,14 @@ test('t returns Spanish for es and for its regions', () => {
   assert.deepEqual(t('es-mx'), t('es'));
 });
 
+test('content component labels are in the dictionaries, English verbatim', () => {
+  const en = { note: 'Note', info: 'Info', tip: 'Tip', warning: 'Warning', danger: 'Danger', tabs: 'Options' };
+  for (const [k, v] of Object.entries(en)) {
+    assert.equal(STRINGS.en[k], v);
+    assert.notEqual(STRINGS.es[k], v);
+  }
+});
+
 test('every dictionary has the same keys', () => {
   assert.deepEqual(Object.keys(STRINGS.es).sort(), Object.keys(STRINGS.en).sort());
 });

@@ -14,6 +14,8 @@ export function getStaticPaths() {
 }
 
 const { page, redirect: to, locale } = Astro.props;
+// Content components (Callout, Tabs) read the page language from here; they get no page props.
+Astro.locals.locale = page?.locale ?? locale;
 const { Content, getHeadings } = page ? await page.load() : {};
 const all = page ? getHeadings() : [];
 const headings = all.filter((h) => h.depth === 2 || h.depth === 3);
