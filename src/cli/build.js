@@ -15,7 +15,7 @@ function beaconModule(config, pages, nav) {
   const source = `
     export const config = ${JSON.stringify(config)};
     export const nav = ${JSON.stringify(nav)};
-    export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, title: p.title, description: p.description })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
+    export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, file: p.file, title: p.title, description: p.description })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
   `;
   return {
     name: 'beacon-module',

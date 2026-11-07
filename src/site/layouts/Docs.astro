@@ -4,7 +4,8 @@ import '../styles/base.css';
 import '../styles/layout.css';
 import Sidebar from '../components/Sidebar.astro';
 import Toc from '../components/Toc.astro';
-import { config, nav } from 'virtual:beacon';
+import { config, nav, pages } from 'virtual:beacon';
+import { rewriteLinks } from '../../cli/links.js';
 import { trail, withBase } from '../lib/nav.js';
 
 const { page, headings, showTitle } = Astro.props;
@@ -13,6 +14,7 @@ const crumbs = trail(nav, href).slice(0, -1);
 // Only override Pier's own (theme-aware) accent when the config changes it.
 const accent = config.accent !== '#d2441c' ? `--beacon-accent:${config.accent}` : undefined;
 const heading = page.title;
+const body = rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL });
 ---
 <!doctype html>
 <html lang="en" style={accent}>
@@ -35,7 +37,7 @@ const heading = page.title;
       <main class="content">
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
-        <article class="prose"><slot /></article>
+        <article class="prose" set:html={body} />
       </main>
       <Toc headings={headings} />
     </div>
