@@ -57,3 +57,9 @@ test('pages have a copy-page button pointing at their Markdown', async () => {
   assert.match(await read('guide/intro/index.html'), /<button[^>]*class="copy-page"[^>]*data-md="\/guide\/intro\.md"[^>]*data-pagefind-ignore/);
   assert.doesNotMatch(await read('404.html'), /copy-page/);
 });
+
+test('build writes llms.txt', async () => {
+  const txt = await read('llms.txt');
+  assert.ok(txt.startsWith('# Reader\n'));
+  assert.match(txt, /https:\/\/docs\.example\.com\/guide\/intro\.md/);
+});
