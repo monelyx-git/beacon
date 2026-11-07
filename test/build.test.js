@@ -35,3 +35,14 @@ test('exactly one h1 per page, whether the title comes from frontmatter or the c
     assert.equal(html.match(/<h1[\s>]/g).length, 1, `h1 count on /${page}`);
   }
 });
+
+test('exactly one font is preloaded, self-hosted, with no Google Fonts', async () => {
+  await build(fixture);
+  const html = await readFile(join(fixture, 'dist/index.html'), 'utf8');
+  const preloads = html.match(/<link[^>]*rel="preload"[^>]*as="font"[^>]*>/g) ?? [];
+  assert.equal(preloads.length, 1);
+  assert.match(preloads[0], /type="font\/woff2"/);
+  assert.match(preloads[0], /crossorigin/);
+  assert.match(preloads[0], /href="\/_astro\/bricolage-grotesque-latin-wght-normal[^"]*\.woff2"/);
+  assert.doesNotMatch(html, /fonts\.(googleapis|gstatic)\.com/);
+});
