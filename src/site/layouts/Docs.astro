@@ -49,9 +49,10 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
           <span>{config.title}</span>
         </a>
         <button type="button" class="theme-toggle" aria-label="Toggle theme">◐</button>
+        <button type="button" class="search-open" aria-label="Search" aria-keyshortcuts="Control+K Meta+K">Search <kbd>⌘K</kbd></button>
         <nav aria-label="Documentation"><Sidebar nodes={nav} current={href} /></nav>
       </aside>
-      <main class="content">
+      <main class="content" data-pagefind-body>
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
@@ -63,7 +64,13 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
       import { toggleTheme } from '../lib/theme-toggle.js';
       // Wrapper so a blocked localStorage throws inside toggleTheme's try, not at property access.
       const storage = { setItem: (k, v) => localStorage.setItem(k, v) };
+      // Search code (Preact, dialog, Pagefind) is fetched only when search is first opened.
+      const openSearch = async () => (await import('../lib/search-mount.jsx')).openSearch(import.meta.env.BASE_URL);
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
+      });
       document.addEventListener('click', (e) => {
+        if (e.target.closest?.('.search-open')) openSearch();
         handleCopyClick(e, navigator.clipboard, setTimeout);
         if (e.target.closest?.('.theme-toggle')) toggleTheme(document, storage);
       });

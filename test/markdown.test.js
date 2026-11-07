@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { build } from '../src/cli/build.js';
+import { measure } from '../scripts/measure-budget.mjs';
 
 const fixture = new URL('./fixtures/fidelity/', import.meta.url).pathname;
 const page = (p) => readFile(join(fixture, 'dist', p, 'index.html'), 'utf8');
@@ -51,5 +52,8 @@ test('fenced code is highlighted at build time, dark, and unlabeled fences stay 
   assert.match(html, /<pre class="astro-code[^"]*" style="background-color:#24292e[^"]*"[^>]*data-language="sh">/);
   assert.match(html, /<span style="color:#[0-9A-Fa-f]{6}">beacon/);
   assert.match(html, /data-language="plaintext">[\s\S]*plain fence/);
-  assert.doesNotMatch(html, /<script[^>]*src=/, 'no reader JS for highlighting');
+  assert.doesNotMatch(html, /astro-island/);
+  // Highlighting happens at build time: only the shared page script ships, not a highlighter.
+  const { js } = await measure(join(fixture, 'dist'), 'code/index.html');
+  assert.ok(js < 4096, `page JS ${js} B gz (a framework or highlighter would add far more)`);
 });

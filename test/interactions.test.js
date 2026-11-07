@@ -9,7 +9,7 @@ test('wrapCodeBlocks adds a copy button to highlighted blocks only', () => {
   const html = '<pre class="astro-code github-dark" tabindex="0"><code>a</code></pre><pre><code>raw</code></pre>';
   const out = wrapCodeBlocks(html);
   assert.equal(out.match(/<div class="code-block">/g).length, 1);
-  assert.match(out, /<div class="code-block"><pre class="astro-code[\s\S]*<\/pre><button type="button" class="copy" aria-live="polite">Copy<\/button><\/div><pre><code>raw/);
+  assert.match(out, /<div class="code-block"><pre class="astro-code[\s\S]*<\/pre><button type="button" class="copy" aria-live="polite" data-pagefind-ignore>Copy<\/button><\/div><pre><code>raw/);
 });
 
 function copyFixture(text, clipboard) {

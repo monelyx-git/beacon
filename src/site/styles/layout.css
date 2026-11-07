@@ -55,3 +55,15 @@
 .tabs [role='tablist'] { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); }
 .tabs [role='tab'] { padding: .4rem .9rem; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted-foreground); font: inherit; cursor: pointer; }
 .tabs [role='tab'][aria-selected='true'] { color: var(--foreground); border-bottom-color: var(--bx-accent); }
+.search-open { display: flex; justify-content: space-between; width: 100%; margin: 0 0 1rem; padding: .4rem .6rem; border: 1px solid var(--sidebar-active); border-radius: .375rem; background: transparent; color: var(--sidebar-muted); font: inherit; cursor: pointer; }
+.search-open kbd { font: inherit; font-size: .75rem; }
+.search { width: min(40rem, 92vw); margin-top: 10vh; padding: 1rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--popover); color: var(--popover-foreground); }
+.search::backdrop { background: rgb(0 0 0 / .5); }
+.search input { width: 100%; padding: .6rem .75rem; border: 1px solid var(--input); border-radius: .375rem; background: var(--background); color: var(--foreground); font: inherit; }
+.search-status { margin: .5rem 0; color: var(--muted-foreground); font-size: .875rem; }
+.search ul { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.search li a { display: block; padding: .5rem .6rem; border-radius: .375rem; color: inherit; text-decoration: none; }
+.search li a:hover, .search li a:focus-visible { background: var(--muted); }
+.search li strong { display: block; color: var(--bx-accent); }
+.search li span { font-size: .875rem; color: var(--muted-foreground); }
+.search mark { background: var(--warning-soft); color: var(--warning-soft-foreground); }

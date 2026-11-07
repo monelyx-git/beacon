@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from '../src/cli/build.js';
+import { measure, BUDGET } from '../scripts/measure-budget.mjs';
 
 const fixture = new URL('./fixtures/basic/', import.meta.url).pathname;
 const bin = new URL('../bin/beacon.js', import.meta.url).pathname;
@@ -84,4 +85,22 @@ test('a site with a path prefix keeps links, canonical and sitemap under it', as
 test('the Astro cache lives in the project, never shared between projects', async () => {
   await build(fixture);
   assert.ok((await stat(join(fixture, 'node_modules/.cache/beacon'))).isDirectory());
+});
+
+test('search index is built, only page bodies are indexed, and plain pages ship no search code', async () => {
+  await build(fixture);
+  assert.ok((await stat(join(fixture, 'dist/pagefind/pagefind.js'))).isFile());
+  assert.ok((await stat(join(fixture, 'dist/pagefind/pagefind-entry.json'))).isFile());
+  const html = await readFile(join(fixture, 'dist/guide/intro/index.html'), 'utf8');
+  assert.match(html, /<main[^>]*data-pagefind-body/);
+  assert.match(html, /<button[^>]*class="search-open"[^>]*aria-keyshortcuts="Control\+K Meta\+K"/);
+  assert.doesNotMatch(html, /astro-island|pagefind\.js|\/pagefind\//);
+  const { js } = await measure(join(fixture, 'dist'), 'guide/intro/index.html');
+  assert.ok(js < 4096, `plain page JS ${js} B gz (a framework would add 9 KB or more)`);
+});
+
+test('a real page with search open stays inside the search-open JS budget', async () => {
+  await build(fixture);
+  const { js } = await measure(join(fixture, 'dist'), 'guide/intro/index.html', { searchOpen: true });
+  assert.ok(js <= BUDGET.jsSearchOpen, `search-open JS ${js} B gz (budget ${BUDGET.jsSearchOpen})`);
 });

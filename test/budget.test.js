@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { measure } from '../scripts/measure-budget.mjs';
+import { measure, BUDGET } from '../scripts/measure-budget.mjs';
 
 const theme = "var t=localStorage.getItem('beacon-theme');";
 
@@ -47,4 +47,27 @@ test('inlineScript is the theme script only; other inline scripts count toward J
   const r = await measure(dir, 'index.html');
   assert.equal(r.inlineScript, theme.length);
   assert.equal(r.js, gzipSync(boot).length + gzipSync(other).length + gzipSync(theme).length);
+});
+
+test('searchOpen also counts lazily imported chunks and the Pagefind runtime', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-budget-'));
+  await mkdir(join(dir, '_astro'));
+  await mkdir(join(dir, 'pagefind'));
+  // The minifier emits template literals for specifiers, e.g. import(`./search.js`).
+  const page = 'document.addEventListener("click",()=>import(`./search.js`));';
+  const search = 'import"./preact.js";export const open=1;';
+  const preact = 'export const p=' + '"x".repeat(4000);'.repeat(2);
+  const pf = 'pagefind'.repeat(500);
+  const worker = 'worker'.repeat(500);
+  for (const [f, c] of [['_astro/page.js', page], ['_astro/search.js', search], ['_astro/preact.js', preact], ['pagefind/pagefind.js', pf], ['pagefind/pagefind-worker.js', worker]]) await writeFile(join(dir, f), c);
+  await writeFile(join(dir, 'index.html'), '<script type="module" src="/_astro/page.js"></script>');
+  const plain = await measure(dir, 'index.html');
+  assert.equal(plain.js, gzipSync(page).length);
+  const open = await measure(dir, 'index.html', { searchOpen: true });
+  assert.equal(open.js, [page, search, preact, pf, worker].reduce((n, c) => n + gzipSync(c).length, 0));
+});
+
+test('the search-open budget is its own, larger number; the reading budget is unchanged', () => {
+  assert.equal(BUDGET.js, 30 * 1024);
+  assert.equal(BUDGET.jsSearchOpen, 36 * 1024);
 });

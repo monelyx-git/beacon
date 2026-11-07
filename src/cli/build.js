@@ -5,6 +5,7 @@ import { build as astroBuild } from 'astro';
 import mdx from '@astrojs/mdx';
 import preact from '@astrojs/preact';
 import { loadConfig } from './config.js';
+import { buildSearchIndex } from './search-index.js';
 import { scanContent, buildNav } from './content.js';
 
 const pkgRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -46,6 +47,7 @@ export async function build(root) {
     integrations: [mdx(), preact()],
     vite: { plugins: [beaconModule({ ...config, logo }, pages, nav)], logLevel: 'warn' },
   });
+  await buildSearchIndex(outDir);
   if (config.logo) await copyFile(join(root, config.logo), join(outDir, basename(config.logo)));
   return { outDir, pages: pages.length };
 }
