@@ -32,3 +32,14 @@ test('blocked storage and junk values fall back to the system preference', () =>
 test('inline script is under 1 KB', () => {
   assert.ok(themeScript.length < 1024, `${themeScript.length} bytes`);
 });
+
+test('inline script restores a hidden sidebar before paint', () => {
+  const classes = new Set();
+  const env = {
+    document: { documentElement: { classList: { toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)) } } },
+    localStorage: { getItem: (k) => (k === 'beacon-sidebar' ? 'hidden' : null) },
+    matchMedia: () => ({ matches: false }),
+  };
+  runInNewContext(themeScript, env);
+  assert.equal(classes.has('sidebar-hidden'), true);
+});

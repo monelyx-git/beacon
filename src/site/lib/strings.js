@@ -2,6 +2,7 @@
 export const STRINGS = {
   en: {
     toggleTheme: 'Toggle theme',
+    toggleSidebar: 'Toggle sidebar',
     search: 'Search',
     navLabel: 'Documentation',
     toc: 'On this page',
@@ -30,6 +31,7 @@ export const STRINGS = {
   },
   es: {
     toggleTheme: 'Cambiar tema',
+    toggleSidebar: 'Mostrar u ocultar la barra lateral',
     search: 'Buscar',
     navLabel: 'Documentación',
     toc: 'En esta página',

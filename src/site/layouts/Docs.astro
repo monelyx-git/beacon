@@ -51,7 +51,8 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
   </head>
   <body>
     <div class="shell">
-      <aside class="sidebar">
+      <button type="button" class="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label={s.toggleSidebar}>⟨</button>
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-head">
           <a class="brand" href={withBase(homeHref(locale, locales))} aria-label={config.logoHtml ? config.title : undefined}>
             {config.logoHtml ? <Fragment set:html={config.logoHtml} /> : <>
@@ -75,17 +76,22 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     <script>
       import { handleCopyClick } from '../lib/copy.js';
       import { toggleTheme } from '../lib/theme-toggle.js';
+      import { toggleSidebar, isSidebarShortcut } from '../lib/sidebar-toggle.js';
       // Wrapper so a blocked localStorage throws inside toggleTheme's try, not at property access.
       const storage = { setItem: (k, v) => localStorage.setItem(k, v) };
       // Search code (Preact, dialog, Pagefind) is fetched only when search is first opened.
       const openSearch = async () => (await import('../lib/search-mount.jsx')).openSearch(import.meta.env.BASE_URL);
+      // The inline head script already applied the saved state; sync the button to it.
+      document.querySelector('.sidebar-toggle')?.setAttribute('aria-expanded', String(!document.documentElement.classList.contains('sidebar-hidden')));
       document.addEventListener('keydown', (e) => {
+        if (isSidebarShortcut(e)) toggleSidebar(document, storage);
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
       });
       document.addEventListener('click', (e) => {
         if (e.target.closest?.('.search-open')) openSearch();
         handleCopyClick(e, navigator.clipboard, setTimeout);
         if (e.target.closest?.('.theme-toggle')) toggleTheme(document, storage);
+        if (e.target.closest?.('.sidebar-toggle')) toggleSidebar(document, storage);
       });
     </script>
   </body>
