@@ -27,7 +27,7 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 | `accent` | no | Accent color as `#rrggbb`. Default is Pier's orange. Must have at least 3:1 contrast against both theme backgrounds. |
 | `logo` | no | Path to an image in your project, shown in the sidebar. A `.html` file is inlined as-is instead, so you can build the whole brand (icon plus wordmark). Use inline `style` or a `<style>` tag; there are no utility classes, and theme colors are available as CSS variables. |
 | `editUrl` | no | Where your docs are edited, for example `https://github.com/acme/docs/edit/main/docs`. Adds an "Edit this page" link per page: this URL plus the file's path inside `content/`. |
-| `collapsibleSidebar` | no | `true` makes every sidebar group collapsible (open on the branch holding the current page). Default `false`. |
+| `collapsibleSidebar` | no | `true` makes folders nested inside a sidebar section collapsible (open on the branch holding the current page). Default `false`. |
 | `favicon` | no | Path to an icon in your project (`.svg`, `.png` or `.ico`), used as the browser tab icon. |
 
 ## Content
@@ -46,6 +46,7 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 
 - **Copy page**: every page has a "Copy page" button that copies its Markdown. The same Markdown is published at `/<slug>.md` (`/index.md` for the home page): the source without frontmatter, with the title added as `# heading` when the body has none. `.mdx` is exported as written, components included.
 - **`llms.txt`**: the build writes `/llms.txt`, a list of every page's Markdown URL with its description, grouped by language when there are several.
+- **Sidebar sections**: a top-level folder is a section, an always-open title with its pages below. With `collapsibleSidebar`, folders nested inside a section collapse behind a chevron.
 - **Hide the sidebar**: a button, or `[`, hides and shows it; the choice is remembered. Below 1024px the sidebar is already a plain block, so this does nothing there.
 - **Previous / next** links, `#` links on headings, and subtle motion that is switched off by the OS "reduce motion" setting.
 

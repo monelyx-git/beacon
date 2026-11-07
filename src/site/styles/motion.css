@@ -8,6 +8,7 @@
   .sidebar { transition: visibility 0s 200ms; }
   html:not(.sidebar-hidden) .sidebar { transition: none; }
   .sidebar-toggle { transition: left 200ms var(--bx-ease), transform 200ms var(--bx-ease), color var(--bx-dur) var(--bx-ease); }
+  .sidebar nav summary::after { transition: transform var(--bx-dur) var(--bx-ease); }
   .search[open] { animation: bx-pop 120ms var(--bx-ease); }
   .search[open]::backdrop { animation: bx-fade 120ms var(--bx-ease); }
   @keyframes bx-pop { from { opacity: 0; transform: translateY(4px); } }

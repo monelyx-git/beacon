@@ -63,3 +63,12 @@ test('build writes llms.txt', async () => {
   assert.ok(txt.startsWith('# Reader\n'));
   assert.match(txt, /https:\/\/docs\.example\.com\/guide\/intro\.md/);
 });
+
+test('top-level folders are always-open sections, nested ones collapse', async () => {
+  const nav = sidebar(await read('guide/intro/index.html'));
+  // Guide is a section: its title and pages are not inside a <details>.
+  assert.match(nav, /<li class="section"><span class="group">Guide<\/span><ul>/);
+  assert.doesNotMatch(nav, /<details[^>]*><summary><span class="group">Guide/);
+  // Advanced is nested, so it collapses, and stays closed away from its own pages.
+  assert.match(nav, /<details><summary><span class="group">Advanced<\/span><\/summary>/);
+});
