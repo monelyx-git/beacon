@@ -11,7 +11,7 @@ import { config, navs, locales, pages, assets, contentDir } from 'virtual:beacon
 import { themeScript } from '../lib/theme-script.js';
 import { rewriteLinks } from '../../cli/links.js';
 import { wrapCodeBlocks } from '../lib/code-blocks.js';
-import { trail, withBase } from '../lib/nav.js';
+import { siblings, trail, withBase } from '../lib/nav.js';
 import { t } from '../lib/strings.js';
 import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
 
@@ -20,6 +20,7 @@ const href = page.slug ? `/${page.slug}/` : '/';
 const { locale } = page;
 const s = t(locale);
 const nav = navs[locale];
+const { prev, next } = siblings(nav, href);
 const crumbs = trail(nav, href).slice(0, -1);
 // Only override Pier's own (theme-aware) accent when the config changes it.
 const accent = config.accent !== '#d2441c' ? `--beacon-accent:${config.accent}` : undefined;
@@ -70,6 +71,12 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
+        {(prev || next) && (
+          <nav class="pager" aria-label={s.pager} data-pagefind-ignore>
+            {prev ? <a class="prev" href={withBase(prev.href)} rel="prev"><small>{s.previous}</small>{prev.label}</a> : <span />}
+            {next ? <a class="next" href={withBase(next.href)} rel="next"><small>{s.next}</small>{next.label}</a> : <span />}
+          </nav>
+        )}
       </main>
       <Toc headings={headings} label={s.toc} />
     </div>

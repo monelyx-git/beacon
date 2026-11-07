@@ -23,3 +23,11 @@ test('collapsible groups open on the branch holding the current page', async () 
   assert.match(tuning, /<details open>(?:(?!<\/details>)[\s\S])*Advanced/);
   assert.doesNotMatch(sidebar(await read('index.html')), /<details open/);
 });
+
+test('pages end with a pager in the page language', async () => {
+  const intro = await read('guide/intro/index.html');
+  assert.match(intro, /<nav class="pager" aria-label="Previous and next page"[^>]*data-pagefind-ignore/);
+  assert.match(intro, /class="pager"[\s\S]*href="\/guide\/setup\/"/);
+  assert.doesNotMatch(await read('index.html'), /<small>Previous<\/small>/);
+  assert.doesNotMatch(await read('404.html'), /class="pager"/);
+});

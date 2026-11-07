@@ -86,3 +86,7 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .sidebar summary::before { content: '▸'; flex: none; width: 1rem; color: var(--sidebar-muted); font-size: .75rem; }
 .sidebar details[open] > summary::before { content: '▾'; }
 .sidebar summary > * { flex: 1; }
+.pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.pager a { display: flex; flex-direction: column; text-decoration: none; }
+.pager small { color: var(--muted-foreground); }
+.pager .next { align-items: flex-end; margin-left: auto; }
