@@ -45,3 +45,11 @@ test('doc links are rewritten and out-of-scope links become text with a warning'
   assert.doesNotMatch(html, /troubleshooting\.md/);
   assert.ok(warnings.some((w) => /links\.md.*troubleshooting\.md is outside content, rendered as text/.test(w)), warnings.join('\n'));
 });
+
+test('fenced code is highlighted at build time, dark, and unlabeled fences stay plain', async () => {
+  const html = await page('code');
+  assert.match(html, /<pre class="astro-code[^"]*" style="background-color:#24292e[^"]*"[^>]*data-language="sh">/);
+  assert.match(html, /<span style="color:#[0-9A-Fa-f]{6}">beacon/);
+  assert.match(html, /data-language="plaintext">[\s\S]*plain fence/);
+  assert.doesNotMatch(html, /<script[^>]*src=/, 'no reader JS for highlighting');
+});
