@@ -60,3 +60,8 @@ test('collapsibleSidebar true is returned, absent by default', async () => {
 test('collapsibleSidebar rejects non-booleans', async () => {
   await assert.rejects(loadConfig(await project({ site: 'https://a.dev', collapsibleSidebar: 'yes' })), /"collapsibleSidebar" must be true or false/);
 });
+
+test('editUrl is validated', async () => {
+  assert.equal((await loadConfig(await project({ site: 'https://a.dev', editUrl: 'https://github.com/o/r/edit/main/docs' }))).editUrl, 'https://github.com/o/r/edit/main/docs');
+  await assert.rejects(loadConfig(await project({ site: 'https://a.dev', editUrl: 'github.com/o/r' })), /"editUrl" must be an absolute http\(s\) URL/);
+});

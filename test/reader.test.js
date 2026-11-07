@@ -37,3 +37,9 @@ test('anchors do not enter the search text or the TOC', async () => {
   assert.match(html, /<h2 id="why">Why<a class="anchor"[^>]*data-pagefind-ignore>#<\/a><\/h2>/);
   assert.match(html, /<a href="#why">Why<\/a>/);
 });
+
+test('edit link points at the source file', async () => {
+  const html = await read('guide/intro/index.html');
+  assert.match(html, /href="https:\/\/github\.com\/acme\/docs\/edit\/main\/docs\/guide\/intro\.md"[^>]*>Edit this page</);
+  assert.doesNotMatch(await read('404.html'), /Edit this page/);
+});

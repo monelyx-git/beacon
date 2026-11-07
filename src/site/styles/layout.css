@@ -92,3 +92,4 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .pager .next { align-items: flex-end; margin-left: auto; }
 .anchor { margin-left: .4em; color: var(--muted-foreground); text-decoration: none; opacity: 0; }
 .prose :is(h2, h3, h4):hover .anchor, .anchor:focus-visible { opacity: 1; }
+.edit { margin: 2rem 0 0; font-size: .875rem; }

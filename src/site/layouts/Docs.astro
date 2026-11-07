@@ -14,6 +14,7 @@ import { wrapCodeBlocks } from '../lib/code-blocks.js';
 import { anchorHeadings } from '../lib/anchors.js';
 import { siblings, trail, withBase } from '../lib/nav.js';
 import { t } from '../lib/strings.js';
+import { editHref } from '../../cli/edit-link.js';
 import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
 
 const { page, headings, showTitle, notFound = false } = Astro.props;
@@ -72,6 +73,7 @@ const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
+        {config.editUrl && page.file && <p class="edit" data-pagefind-ignore><a href={editHref(config.editUrl, contentDir, page.file)}>{s.editPage}</a></p>}
         {(prev || next) && (
           <nav class="pager" aria-label={s.pager} data-pagefind-ignore>
             {prev ? <a class="prev" href={withBase(prev.href)} rel="prev"><small>{s.previous}</small>{prev.label}</a> : <span />}
