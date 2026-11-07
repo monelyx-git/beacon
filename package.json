@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Minimal static documentation generator for the Monelyx ecosystem.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22.2"
   },
