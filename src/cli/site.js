@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import preact from '@astrojs/preact';
 import { loadConfig } from './config.js';
-import { scanAssets, scanContent, buildNav } from './content.js';
+import { scanAssets, scanContent, buildNav, rootRedirect } from './content.js';
 
 const pkgRoot = fileURLToPath(new URL('../../', import.meta.url));
 const VIRTUAL = 'virtual:beacon';
@@ -15,14 +15,16 @@ export async function loadSite(root) {
   const config = await loadConfig(root);
   const contentDir = join(root, 'content');
   const pages = await scanContent(contentDir);
-  return { config, pages, nav: buildNav(pages), assets: await scanAssets(contentDir), contentDir };
+  const nav = buildNav(pages);
+  return { config, pages, nav, redirect: rootRedirect(nav), assets: await scanAssets(contentDir), contentDir };
 }
 
-const moduleSource = ({ config, pages, nav, assets, contentDir }) => `
+const moduleSource = ({ config, pages, nav, redirect, assets, contentDir }) => `
   export const assets = ${JSON.stringify(assets)};
   export const contentDir = ${JSON.stringify(contentDir)};
   export const config = ${JSON.stringify({ ...config, logo: config.logo ? `/${basename(config.logo)}` : undefined })};
   export const nav = ${JSON.stringify(nav)};
+  export const redirect = ${JSON.stringify(redirect)};
   export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, file: p.file, title: p.title, description: p.description })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
 `;
 

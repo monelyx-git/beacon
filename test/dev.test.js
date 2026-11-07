@@ -89,3 +89,21 @@ test('dev serves files and raw images from content', async () => {
     await server.stop();
   }
 });
+
+test('dev redirects / to the first page without a root index, and serves the index once it is added', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'beacon-dev-'));
+  await mkdir(join(root, 'content'));
+  await writeFile(join(root, 'beacon.config.json'), JSON.stringify({ site: 'https://x.dev' }));
+  await writeFile(join(root, 'content/a.md'), '# A\n\nHello there.\n');
+  const server = await dev(root, { port: await freePort() });
+  try {
+    const get = async (path) => (await fetch(`${server.url}${path}`)).text();
+    assert.equal(server.redirect, '/a/');
+    assert.match(await get('/'), /http-equiv="refresh" content="0; url=\/a\/"/);
+    await writeFile(join(root, 'content/index.md'), '# Welcome home\n\nHi.\n');
+    await until(async () => /Welcome home/.test(await get('/')));
+    assert.doesNotMatch(await get('/'), /http-equiv="refresh"/);
+  } finally {
+    await server.stop();
+  }
+});

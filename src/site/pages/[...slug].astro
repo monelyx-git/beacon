@@ -4,17 +4,19 @@ import Callout from '../components/Callout.astro';
 import Steps from '../components/Steps.astro';
 import Tabs from '../components/Tabs.astro';
 import Tab from '../components/Tab.astro';
-import { pages } from 'virtual:beacon';
+import RootRedirect from '../components/RootRedirect.astro';
+import { pages, redirect } from 'virtual:beacon';
 
 export function getStaticPaths() {
-  return pages.map((page) => ({ params: { slug: page.slug || undefined }, props: { page } }));
+  const paths = pages.map((page) => ({ params: { slug: page.slug || undefined }, props: { page } }));
+  return redirect ? [...paths, { params: { slug: undefined }, props: { redirect } }] : paths;
 }
 
-const { page } = Astro.props;
-const { Content, getHeadings } = await page.load();
-const all = getHeadings();
+const { page, redirect: to } = Astro.props;
+const { Content, getHeadings } = page ? await page.load() : {};
+const all = page ? getHeadings() : [];
 const headings = all.filter((h) => h.depth === 2 || h.depth === 3);
 // The layout renders the title as h1 unless the content brings its own.
 const ownH1 = all.some((h) => h.depth === 1);
 ---
-<Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps, Tabs, Tab }} /></Docs>
+{to ? <RootRedirect to={to} /> : <Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps, Tabs, Tab }} /></Docs>}

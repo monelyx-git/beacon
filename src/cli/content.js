@@ -135,3 +135,16 @@ export function buildNav(pages) {
 export async function scanAssets(dir) {
   return (await walk(dir, (name) => !/\.mdx?$/.test(name))).sort();
 }
+
+/** Where `/` should redirect when there is no root page: the first nav node with an href, depth-first. Null when `/` has a page. */
+export function rootRedirect(nav) {
+  const first = (nodes) => {
+    for (const n of nodes) {
+      const h = n.href ?? first(n.children);
+      if (h) return h;
+    }
+    return null;
+  };
+  const target = first(nav);
+  return target === '/' ? null : target;
+}

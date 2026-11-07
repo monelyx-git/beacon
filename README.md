@@ -32,6 +32,7 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 - Pages are `.md` or `.mdx` files in `content/`. Frontmatter is optional: `title`, `description`, `order`.
 - Title falls back to the first `# heading`, then the file name. Description falls back to the first paragraph.
 - The sidebar follows the folder structure. `order` sorts within a folder; ties sort alphabetically. `index.md` is the folder's own page.
+- **The site root `/`**: `content/index.md` is the home page. Without one, `/` is a small redirect page (`noindex`, not in `sitemap.xml` or search) to the first page in sidebar order, and the build prints which page that is. To choose the landing page, add `content/index.md` or give a page `order: 1`.
 - Relative links between pages (`./install.md#linux`) are rewritten. A link to a file outside `content/` is rendered as plain text with a build warning.
 - Images: `![alt](./img/pic.png)` in Markdown is handled by Astro (optimized, hashed, lazy-loaded). Any other file in `content/` (PDFs, raw `<img>` tags, downloads) is copied to the same relative path in `dist/`, and relative links to it are rewritten so they work from any page. A relative image that does not exist is reported as a build warning.
 - File and folder names need at least one ASCII letter or digit (`日本語.md` is a build error, not a wrong URL). Frontmatter supports single-line `key: value` pairs only.

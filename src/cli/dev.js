@@ -9,5 +9,5 @@ export async function dev(projectRoot, { port = 4321 } = {}) {
   const site = await loadSite(root);
   const server = await astroDev({ ...astroConfig(root, site, { watch: true }), server: { port, host: '127.0.0.1' } });
   const base = new URL(site.config.site).pathname.replace(/\/$/, '');
-  return { url: `http://127.0.0.1:${server.address.port}${base}`, stop: () => server.stop() };
+  return { redirect: site.redirect, url: `http://127.0.0.1:${server.address.port}${base}`, stop: () => server.stop() };
 }
