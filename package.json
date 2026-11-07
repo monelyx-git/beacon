@@ -1,10 +1,9 @@
 {
   "name": "@monelyx/beacon",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Minimal static documentation generator for the Monelyx ecosystem.",
   "type": "module",
   "license": "UNLICENSED",
-  "private": true,
   "engines": {
     "node": ">=22.2"
   },
@@ -31,5 +30,16 @@
     "bin",
     "src"
   ],
-  "packageManager": "pnpm@9.15.3"
+  "packageManager": "pnpm@9.15.3",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monelyx-git/beacon.git"
+  },
+  "homepage": "https://github.com/monelyx-git/beacon#readme",
+  "bugs": {
+    "url": "https://github.com/monelyx-git/beacon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
