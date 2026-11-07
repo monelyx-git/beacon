@@ -40,6 +40,21 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 - File and folder names need at least one ASCII letter or digit (`日本語.md` is a build error, not a wrong URL). Frontmatter supports single-line `key: value` pairs only.
 - In `.mdx`, these components need no import: `<Callout type="note|tip|warning|danger" title="...">`, `<Steps>` wrapping an ordered list, and `<Tabs>` with `<Tab label="...">` children. Without JavaScript all tab panels are shown.
 
+## Languages
+
+Add `"locales": ["en", "es"]` to the config. The first entry is the default language, and its pages stay where they are; every other language mirrors the tree under `content/<code>/`:
+
+```
+content/install.md       ->  /install/
+content/es/install.md    ->  /es/install/
+```
+
+- Each language has its own sidebar, search index and `<html lang>`, and every page carries `hreflang` alternates. A language switcher appears when there are two or more languages. Built-in labels (search, theme toggle, callout titles) are translated for `es`; other codes fall back to English.
+- A missing translation means the page does not exist in that language: the switcher links to that language's home instead, and the build only prints a warning listing what is untranslated.
+- A folder's sidebar label comes from its name; to translate it, add an `index.md` in that folder under `content/<code>/`.
+- A top-level folder named like a configured code (`content/es/` when `es` is listed) is reserved for that language.
+- With a single entry, for example `["fr"]`, the site is unchanged apart from `<html lang>`.
+
 ## Performance budgets (gzipped, measured)
 
 | State | JS | CSS |
