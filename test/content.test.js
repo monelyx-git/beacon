@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { scanContent, buildNav, rootRedirect } from '../src/cli/content.js';
+import { scanContent, buildNav, rootRedirect, mdPath, pageMarkdown } from '../src/cli/content.js';
 
 async function tree(files) {
   const dir = await mkdtemp(join(tmpdir(), 'beacon-content-'));
@@ -128,4 +128,32 @@ test('rootRedirect: descends into groups that have no page of their own', async 
   assert.equal(rootRedirect(buildNav(pages)), '/guide/deep/x/');
   const onlyNested = await scanContent(await tree({ 'guide/deep/x.md': '# X' }));
   assert.equal(rootRedirect(buildNav(onlyNested)), '/guide/deep/x/');
+});
+
+test('mdPath maps slugs to files', () => {
+  assert.equal(mdPath(''), 'index.md');
+  assert.equal(mdPath('guide/intro'), 'guide/intro.md');
+});
+
+async function md(body) {
+  const dir = await tree({ 'p.md': body });
+  const [page] = await scanContent(dir);
+  return pageMarkdown(page);
+}
+
+test('pageMarkdown strips frontmatter and adds the title when the body has no h1', async () => {
+  assert.equal(await md('---\ntitle: Hi\n---\n\nBody\n'), '# Hi\n\nBody\n');
+});
+
+test('pageMarkdown keeps an existing h1 and does not add a second', async () => {
+  assert.equal(await md('# Own\n\nBody\n\n\n'), '# Own\n\nBody\n');
+});
+
+test('pageMarkdown ignores a # line inside a code fence when deciding', async () => {
+  const out = await md('---\ntitle: T\n---\n```sh\n# comment\n```\n');
+  assert.ok(out.startsWith('# T\n\n```sh'));
+});
+
+test('pageMarkdown handles BOM and CRLF', async () => {
+  assert.equal(await md('\uFEFF---\r\ntitle: T\r\n---\r\nBody\r\n'), '# T\n\nBody\n');
 });

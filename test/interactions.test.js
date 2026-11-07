@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wrapCodeBlocks } from '../src/site/lib/code-blocks.js';
-import { handleCopyClick } from '../src/site/lib/copy.js';
+import { handleCopyClick, handlePageCopyClick } from '../src/site/lib/copy.js';
 import { toggleTheme } from '../src/site/lib/theme-toggle.js';
 import { THEME_KEY } from '../src/site/lib/theme-script.js';
 
@@ -45,4 +45,54 @@ test('toggleTheme flips the class, stores the choice and survives blocked storag
   assert.equal(stored[THEME_KEY], 'light');
   assert.equal(toggleTheme(root, { setItem: () => { throw new Error('blocked'); } }), true);
   assert.equal(classes.has('dark'), true);
+});
+
+function pageFixture({ fetchImpl, ClipboardItem, clipboard }) {
+  const button = { textContent: 'Copy page', dataset: { md: '/guide/intro.md' } };
+  const timers = [];
+  const target = { closest: (s) => (s === '.copy-page' ? button : null) };
+  const run = () => handlePageCopyClick({ target }, { fetch: fetchImpl, clipboard, ClipboardItem }, (fn) => timers.push(fn));
+  return { button, timers, run };
+}
+const ok = (text) => async () => ({ ok: true, text: async () => text });
+
+test('page copy writes the fetched Markdown and confirms', async () => {
+  const written = [];
+  const f = pageFixture({ fetchImpl: ok('# Hi\n'), clipboard: { writeText: async (t) => written.push(t) } });
+  await f.run();
+  assert.deepEqual(written, ['# Hi\n']);
+  assert.equal(f.button.textContent, 'Copied');
+  f.timers[0]();
+  assert.equal(f.button.textContent, 'Copy page');
+});
+
+test('page copy starts a ClipboardItem write synchronously from the click', async () => {
+  let release;
+  const pending = new Promise((r) => { release = r; });
+  const writes = [];
+  class Item { constructor(data) { this.data = data; } }
+  const f = pageFixture({
+    fetchImpl: () => pending,
+    ClipboardItem: Item,
+    clipboard: { write: async ([item]) => { writes.push(item); await item.data['text/plain']; } },
+  });
+  const done = f.run();
+  assert.equal(writes.length, 1);
+  release({ ok: true, text: async () => 'x' });
+  await done;
+  assert.equal(f.button.textContent, 'Copied');
+});
+
+test('page copy reports a failed request without throwing', async () => {
+  const clipboard = { writeText: async () => {} };
+  const a = pageFixture({ fetchImpl: async () => ({ ok: false }), clipboard });
+  await a.run();
+  assert.equal(a.button.textContent, 'Copy failed');
+  const b = pageFixture({ fetchImpl: async () => { throw new Error('offline'); }, clipboard });
+  await b.run();
+  assert.equal(b.button.textContent, 'Copy failed');
+});
+
+test('page copy ignores clicks elsewhere', async () => {
+  await assert.doesNotReject(handlePageCopyClick({ target: { closest: () => null } }, {}, () => {}));
 });

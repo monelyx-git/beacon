@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import preact from '@astrojs/preact';
 import { loadConfig } from './config.js';
-import { scanAssets, scanContent, rootRedirect } from './content.js';
+import { mdPath, pageMarkdown, scanAssets, scanContent, rootRedirect } from './content.js';
 import { assignLocales, homeHref, missingTranslations, navFor } from './locales.js';
 
 const pkgRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -77,6 +77,17 @@ function beaconModule(root, initial, { watch }) {
         if (!path.startsWith(`${base}/`)) return next();
         const file = join(dir, path.slice(base.length));
         return site.assets.includes(file) ? sendFile(file, res) : next();
+      });
+      // Each page's Markdown, as `beacon build` writes it.
+      server.middlewares.use(async (req, res, next) => {
+        let path;
+        try { path = decodeURIComponent((req.url ?? '').split('?')[0]); } catch { return next(); }
+        const page = path.startsWith(`${base}/`) && site.pages.find((p) => `${base}/${mdPath(p.slug)}` === path);
+        if (!page) return next();
+        try {
+          res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+          res.end(await pageMarkdown(page));
+        } catch { res.statusCode = 404; res.end(); }
       });
       // The logo and favicon live in the user's project; build copies them, dev serves them.
       for (const file of [site.config.logo, site.config.favicon].filter(Boolean)) {

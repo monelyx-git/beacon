@@ -4,6 +4,7 @@ import latinFont from '@fontsource-variable/bricolage-grotesque/files/bricolage-
 import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/layout.css';
+import '../styles/motion.css';
 import Sidebar from '../components/Sidebar.astro';
 import Toc from '../components/Toc.astro';
 import LangSwitch from '../components/LangSwitch.astro';
@@ -11,8 +12,11 @@ import { config, navs, locales, pages, assets, contentDir } from 'virtual:beacon
 import { themeScript } from '../lib/theme-script.js';
 import { rewriteLinks } from '../../cli/links.js';
 import { wrapCodeBlocks } from '../lib/code-blocks.js';
-import { trail, withBase } from '../lib/nav.js';
+import { anchorHeadings } from '../lib/anchors.js';
+import { siblings, trail, withBase } from '../lib/nav.js';
 import { t } from '../lib/strings.js';
+import { mdPath } from '../../cli/content.js';
+import { editHref } from '../../cli/edit-link.js';
 import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
 
 const { page, headings, showTitle, notFound = false } = Astro.props;
@@ -20,6 +24,7 @@ const href = page.slug ? `/${page.slug}/` : '/';
 const { locale } = page;
 const s = t(locale);
 const nav = navs[locale];
+const { prev, next } = siblings(nav, href);
 const crumbs = trail(nav, href).slice(0, -1);
 // Only override Pier's own (theme-aware) accent when the config changes it.
 const accent = config.accent !== '#d2441c' ? `--beacon-accent:${config.accent}` : undefined;
@@ -27,7 +32,7 @@ const heading = page.title;
 const description = page.description ?? config.title;
 const canonical = `${config.site}${href}`;
 const title = heading === config.title ? heading : `${heading} · ${config.title}`;
-const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }), s);
+const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }), s), s.anchor);
 ---
 <!doctype html>
 <html lang={locale} style={accent}>
@@ -51,7 +56,8 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
   </head>
   <body>
     <div class="shell">
-      <aside class="sidebar">
+      <button type="button" class="sidebar-toggle" aria-controls="sidebar" aria-expanded="true" aria-label={s.toggleSidebar}>⟨</button>
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-head">
           <a class="brand" href={withBase(homeHref(locale, locales))} aria-label={config.logoHtml ? config.title : undefined}>
             {config.logoHtml ? <Fragment set:html={config.logoHtml} /> : <>
@@ -62,30 +68,46 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
           <button type="button" class="theme-toggle" aria-label={s.toggleTheme}>◐</button>
         </div>
         <button type="button" class="search-open" aria-label={s.search} aria-keyshortcuts="Control+K Meta+K">{s.search} <kbd>⌘K</kbd></button>
-        <nav aria-label={s.navLabel}><Sidebar nodes={nav} current={href} /></nav>
+        <nav aria-label={s.navLabel}><Sidebar nodes={nav} current={href} collapsible={config.collapsibleSidebar} /></nav>
         {locales.length > 1 && <LangSwitch links={switcherLinks(pages, page, locales)} />}
       </aside>
       <main class="content" data-pagefind-body={notFound ? undefined : ''}>
-        {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
+        <div class="meta-row">
+          {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
+          {!notFound && <button type="button" class="copy-page" data-md={withBase(`/${mdPath(page.slug)}`)} data-copy={s.copyPage} data-copied={s.copied} data-failed={s.copyFailed} aria-live="polite" data-pagefind-ignore>{s.copyPage}</button>}
+        </div>
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
+        {config.editUrl && page.file && <p class="edit" data-pagefind-ignore><a href={editHref(config.editUrl, contentDir, page.file)}>{s.editPage}</a></p>}
+        {(prev || next) && (
+          <nav class="pager" aria-label={s.pager} data-pagefind-ignore>
+            {prev ? <a class="prev" href={withBase(prev.href)} rel="prev"><small>{s.previous}</small>{prev.label}</a> : <span />}
+            {next ? <a class="next" href={withBase(next.href)} rel="next"><small>{s.next}</small>{next.label}</a> : <span />}
+          </nav>
+        )}
       </main>
       <Toc headings={headings} label={s.toc} />
     </div>
     <script>
-      import { handleCopyClick } from '../lib/copy.js';
+      import { handleCopyClick, handlePageCopyClick } from '../lib/copy.js';
       import { toggleTheme } from '../lib/theme-toggle.js';
+      import { toggleSidebar, isSidebarShortcut } from '../lib/sidebar-toggle.js';
       // Wrapper so a blocked localStorage throws inside toggleTheme's try, not at property access.
       const storage = { setItem: (k, v) => localStorage.setItem(k, v) };
       // Search code (Preact, dialog, Pagefind) is fetched only when search is first opened.
       const openSearch = async () => (await import('../lib/search-mount.jsx')).openSearch(import.meta.env.BASE_URL);
+      // The inline head script already applied the saved state; sync the button to it.
+      document.querySelector('.sidebar-toggle')?.setAttribute('aria-expanded', String(!document.documentElement.classList.contains('sidebar-hidden')));
       document.addEventListener('keydown', (e) => {
+        if (isSidebarShortcut(e)) toggleSidebar(document, storage);
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); }
       });
       document.addEventListener('click', (e) => {
         if (e.target.closest?.('.search-open')) openSearch();
         handleCopyClick(e, navigator.clipboard, setTimeout);
+        handlePageCopyClick(e, { fetch, clipboard: navigator.clipboard, ClipboardItem: globalThis.ClipboardItem }, setTimeout);
         if (e.target.closest?.('.theme-toggle')) toggleTheme(document, storage);
+        if (e.target.closest?.('.sidebar-toggle')) toggleSidebar(document, storage);
       });
     </script>
   </body>

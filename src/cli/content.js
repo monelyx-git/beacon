@@ -148,3 +148,17 @@ export function rootRedirect(nav, home = '/') {
   const target = first(nav);
   return target === home ? null : target;
 }
+
+/** File a page's Markdown is published at, relative to the site root. */
+export const mdPath = (slug) => `${slug || 'index'}.md`;
+
+/**
+ * The page's source without frontmatter, with its title as `# ` heading when the body has none.
+ * shortcut: .mdx is exported verbatim (components and imports included), upgrade if readers need rendered Markdown.
+ */
+export async function pageMarkdown(page) {
+  const { body } = parseFrontmatter(await readFile(page.file, 'utf8'), page.file);
+  const text = body.replace(/\r\n?/g, '\n').trim();
+  const head = firstHeading(text) ? '' : `# ${page.title}\n\n`;
+  return `${head}${text}`.trimEnd() + '\n';
+}

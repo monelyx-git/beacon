@@ -51,3 +51,17 @@ test('invalid locales names the field', async () => {
 test('missing config file is a clear error', async () => {
   await assert.rejects(loadConfig(await project()), /no beacon\.config\.\(js\|mjs\|json\) found/);
 });
+
+test('collapsibleSidebar true is returned, absent by default', async () => {
+  assert.equal((await loadConfig(await project({ site: 'https://a.dev', collapsibleSidebar: true }))).collapsibleSidebar, true);
+  assert.equal('collapsibleSidebar' in (await loadConfig(await project({ site: 'https://a.dev' }))), false);
+});
+
+test('collapsibleSidebar rejects non-booleans', async () => {
+  await assert.rejects(loadConfig(await project({ site: 'https://a.dev', collapsibleSidebar: 'yes' })), /"collapsibleSidebar" must be true or false/);
+});
+
+test('editUrl is validated', async () => {
+  assert.equal((await loadConfig(await project({ site: 'https://a.dev', editUrl: 'https://github.com/o/r/edit/main/docs' }))).editUrl, 'https://github.com/o/r/edit/main/docs');
+  await assert.rejects(loadConfig(await project({ site: 'https://a.dev', editUrl: 'github.com/o/r' })), /"editUrl" must be an absolute http\(s\) URL/);
+});

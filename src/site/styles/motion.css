@@ -1,0 +1,15 @@
+/* All motion lives here, and only runs when the OS has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html { --bx-dur: 150ms; --bx-ease: ease-out; scroll-behavior: smooth; }
+  a, button, summary, .anchor, .toc a {
+    transition: color var(--bx-dur) var(--bx-ease), background-color var(--bx-dur) var(--bx-ease), border-color var(--bx-dur) var(--bx-ease), opacity var(--bx-dur) var(--bx-ease);
+  }
+  .shell { transition: grid-template-columns 200ms var(--bx-ease); }
+  .sidebar { transition: visibility 0s 200ms; }
+  html:not(.sidebar-hidden) .sidebar { transition: none; }
+  .sidebar-toggle { transition: left 200ms var(--bx-ease), transform 200ms var(--bx-ease), color var(--bx-dur) var(--bx-ease); }
+  .search[open] { animation: bx-pop 120ms var(--bx-ease); }
+  .search[open]::backdrop { animation: bx-fade 120ms var(--bx-ease); }
+  @keyframes bx-pop { from { opacity: 0; transform: translateY(4px); } }
+  @keyframes bx-fade { from { opacity: 0; } }
+}
