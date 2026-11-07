@@ -1,4 +1,5 @@
 import { accessSync, constants, createReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
@@ -13,6 +14,12 @@ const RESOLVED = `\0${VIRTUAL}`;
 /** Config, pages and nav for a project. Throws the user-facing config or content error. */
 export async function loadSite(root) {
   const config = await loadConfig(root);
+  // An .html logo is the author's own markup, inlined in the sidebar instead of served as an image.
+  // shortcut: dev reads it once per start, restart to see edits.
+  if (/\.html?$/i.test(config.logo ?? '')) {
+    config.logoHtml = await readFile(join(root, config.logo), 'utf8');
+    delete config.logo;
+  }
   const contentDir = join(root, 'content');
   const pages = await scanContent(contentDir);
   const nav = buildNav(pages);
@@ -22,7 +29,7 @@ export async function loadSite(root) {
 const moduleSource = ({ config, pages, nav, redirect, assets, contentDir }) => `
   export const assets = ${JSON.stringify(assets)};
   export const contentDir = ${JSON.stringify(contentDir)};
-  export const config = ${JSON.stringify({ ...config, logo: config.logo ? `/${basename(config.logo)}` : undefined })};
+  export const config = ${JSON.stringify({ ...config, logo: config.logo ? `/${basename(config.logo)}` : undefined, favicon: config.favicon ? `/${basename(config.favicon)}` : undefined })};
   export const nav = ${JSON.stringify(nav)};
   export const redirect = ${JSON.stringify(redirect)};
   export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, file: p.file, title: p.title, description: p.description })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
@@ -58,10 +65,9 @@ function beaconModule(root, initial, { watch }) {
         const file = join(dir, path.slice(base.length));
         return site.assets.includes(file) ? sendFile(file, res) : next();
       });
-      // The logo lives in the user's project; build copies it, dev serves it.
-      if (site.config.logo) {
-        const url = `/${basename(site.config.logo)}`;
-        server.middlewares.use(url, (req, res) => sendFile(join(root, site.config.logo), res));
+      // The logo and favicon live in the user's project; build copies them, dev serves them.
+      for (const file of [site.config.logo, site.config.favicon].filter(Boolean)) {
+        server.middlewares.use(`/${basename(file)}`, (req, res) => sendFile(join(root, file), res));
       }
     },
   };

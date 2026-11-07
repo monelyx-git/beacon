@@ -29,6 +29,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {config.favicon && <link rel="icon" href={withBase(config.favicon)} />}
     <meta name="description" content={description} />
     {notFound ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
@@ -44,11 +45,15 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <a class="brand" href={withBase('/')}>
-          {config.logo && <img src={withBase(config.logo)} alt="" width="24" height="24" />}
-          <span>{config.title}</span>
-        </a>
-        <button type="button" class="theme-toggle" aria-label="Toggle theme">◐</button>
+        <div class="sidebar-head">
+          <a class="brand" href={withBase('/')} aria-label={config.logoHtml ? config.title : undefined}>
+            {config.logoHtml ? <Fragment set:html={config.logoHtml} /> : <>
+              {config.logo && <img src={withBase(config.logo)} alt="" width="24" height="24" />}
+              <span>{config.title}</span>
+            </>}
+          </a>
+          <button type="button" class="theme-toggle" aria-label="Toggle theme">◐</button>
+        </div>
         <button type="button" class="search-open" aria-label="Search" aria-keyshortcuts="Control+K Meta+K">Search <kbd>⌘K</kbd></button>
         <nav aria-label="Documentation"><Sidebar nodes={nav} current={href} /></nav>
       </aside>

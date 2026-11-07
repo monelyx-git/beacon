@@ -16,6 +16,6 @@ export async function build(root) {
     await mkdir(dirname(dest), { recursive: true });
     await copyFile(asset, dest);
   }
-  if (site.config.logo) await copyFile(join(root, site.config.logo), join(config.outDir, basename(site.config.logo)));
+  for (const file of [site.config.logo, site.config.favicon].filter(Boolean)) await copyFile(join(root, file), join(config.outDir, basename(file)));
   return { outDir: config.outDir, pages: site.pages.length, redirect: site.redirect };
 }
