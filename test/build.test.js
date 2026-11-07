@@ -124,3 +124,26 @@ test('dist/pagefind keeps only the runtime we use, not Pagefind\'s bundled UIs',
   }
   for (const needed of ['pagefind.js', 'pagefind-worker.js', 'pagefind-entry.json']) assert.ok(files.includes(needed), `${needed} is required`);
 });
+
+// A real 1x1 PNG: Astro's own image pipeline rejects anything it cannot read metadata from.
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+test('files and raw images in content are copied and linked from any page; Markdown images stay Astro-managed', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-assets-'));
+  await mkdir(join(dir, 'content/img'), { recursive: true });
+  await mkdir(join(dir, 'content/files'));
+  await mkdir(join(dir, 'content/guide'));
+  await writeFile(join(dir, 'beacon.config.json'), JSON.stringify({ site: 'https://x.dev/docs' }));
+  await writeFile(join(dir, 'content/img/pic.png'), PNG);
+  await writeFile(join(dir, 'content/files/a.pdf'), '%PDF-1.4');
+  await writeFile(join(dir, 'content/index.md'), '# Home\n\n![top](./img/pic.png)\n\n<img src="./img/pic.png" alt="raw">\n\n[Download](./files/a.pdf)\n');
+  await writeFile(join(dir, 'content/guide/a.md'), '# A\n\n<img src="../img/pic.png" alt="rawnested">\n');
+  await build(dir);
+  assert.ok((await stat(join(dir, 'dist/img/pic.png'))).isFile());
+  assert.ok((await stat(join(dir, 'dist/files/a.pdf'))).isFile());
+  const home = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(home, /<img[^>]*src="\/docs\/_astro\/pic\.[^"]+\.webp"[^>]*alt="top"/);
+  assert.match(home, /<img src="\/docs\/img\/pic\.png" alt="raw">/);
+  assert.match(home, /<a href="\/docs\/files\/a\.pdf">Download<\/a>/);
+  assert.match(await readFile(join(dir, 'dist/guide/a/index.html'), 'utf8'), /<img src="\/docs\/img\/pic\.png" alt="rawnested">/);
+});

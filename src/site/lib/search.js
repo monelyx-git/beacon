@@ -9,12 +9,19 @@ export async function runSearch(pagefind, query, limit = 8) {
   }));
 }
 
-let loading;
-/** Loads Pagefind once, on first use, from the site's base path. `importer` exists so tests need no browser. */
+const loading = new Map();
+/**
+ * Loads Pagefind once per base path, on first use. A failed load is forgotten so the next query retries.
+ * `importer` exists so tests need no browser.
+ */
 export function loadPagefind(base, importer = (url) => import(/* @vite-ignore */ url)) {
-  loading ??= importer(`${base}pagefind/pagefind.js`).then(async (pf) => {
-    await pf.options({ baseUrl: base });
-    return pf;
-  });
-  return loading;
+  if (!loading.has(base)) {
+    const pending = importer(`${base}pagefind/pagefind.js`).then(async (pf) => {
+      await pf.options({ baseUrl: base });
+      return pf;
+    });
+    pending.catch(() => loading.delete(base));
+    loading.set(base, pending);
+  }
+  return loading.get(base);
 }

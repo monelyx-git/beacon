@@ -81,3 +81,35 @@ test('description: frontmatter wins, otherwise the first paragraph as plain text
   assert.equal(pages['c'].description, undefined);
   assert.ok(pages['d'].description.length <= 160 && pages['d'].description.endsWith('…'));
 });
+
+test('frontmatter: quotes are stripped only when they match, so titles keep their own quotes', async () => {
+  const pages = bySlug(await scanContent(await tree({
+    'a.md': '---\ntitle: Using "quotes"\n---\n# x\n',
+    'b.md': '---\ntitle: \'Quoted\'\ndescription: "Also quoted"\n---\n# x\n',
+    'c.md': '---\ntitle: "mismatch\'\n---\n# x\n',
+  })));
+  assert.equal(pages['a'].title, 'Using "quotes"');
+  assert.equal(pages['b'].title, 'Quoted');
+  assert.equal(pages['b'].description, 'Also quoted');
+  assert.equal(pages['c'].title, '"mismatch\'');
+});
+
+test('frontmatter: unsupported multi-line values fail with the file and key', async () => {
+  const dir = await tree({ 'a.md': '---\ndescription: >\n  folded\n---\n# A\n' });
+  await assert.rejects(scanContent(dir), /a\.md.*"description".*single-line/s);
+});
+
+test('frontmatter: an empty block and a BOM do not swallow or hide content', async () => {
+  const pages = bySlug(await scanContent(await tree({
+    'empty.md': '---\n---\n# Real title\n\nFirst paragraph.\n\n---\n\nAfter the rule.\n',
+    'bom.md': '\uFEFF---\ntitle: With BOM\n---\nBody\n',
+  })));
+  assert.equal(pages['empty'].title, 'Real title');
+  assert.equal(pages['empty'].description, 'First paragraph.');
+  assert.equal(pages['bom'].title, 'With BOM');
+});
+
+test('a file or folder name with no ASCII letters or digits is a clear error, not a wrong URL', async () => {
+  await assert.rejects(scanContent(await tree({ '日本語.md': '# JP\n' })), /cannot derive a URL from "日本語\.md"/);
+  await assert.rejects(scanContent(await tree({ '日本語/intro.md': '# JP\n' })), /cannot derive a URL from "日本語\/intro\.md"/);
+});

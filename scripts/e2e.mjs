@@ -91,6 +91,10 @@ await key('Escape', { code: 'Escape', windowsVirtualKeyCode: 27 });
 check('Escape closes search', await waitFor(`!document.querySelector('dialog.search[open]')`));
 await key('k', { modifiers: mod, code: 'KeyK', windowsVirtualKeyCode: 75 });
 check('search reopens', await waitFor(`!!document.querySelector('dialog.search[open]')`));
+await ev(`(() => { const i = document.querySelector('.search input'); i.value = ''; })()`);
+await send('Input.insertText', { text: 'zebraword' });
+check('page text that looks like markup finds the page', await waitFor(`[...document.querySelectorAll('.search li a')].some((a) => a.getAttribute('href').includes('/hostile/'))`));
+check('result excerpts never contain live elements other than <mark>', await ev(`[...document.querySelectorAll('.search li span *')].every((e) => e.tagName === 'MARK') && window.__xss === undefined`));
 
 check('no uncaught JS exceptions', exceptions.length === 0, exceptions.join(' | '));
 ws.close(); chrome.kill(); server.close();

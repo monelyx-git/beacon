@@ -44,3 +44,26 @@ test('rewriteLinks rewrites doc links, adds the base path, and unwraps out-of-sc
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /getting-started\.md: link to \.\/gone\.md is outside content, rendered as text/);
 });
+
+test('percent-encoded links resolve to files with spaces in their names', () => {
+  const withSpace = [...pages, { slug: 'my-page', file: '/c/my page.md' }];
+  assert.deepEqual(resolveLink(from, './my%20page.md#x', withSpace), { href: '/my-page/#x' });
+  assert.deepEqual(resolveLink(from, './bad%zz.md', withSpace), { outOfScope: true });
+});
+
+test('rewriteLinks maps relative images and files to their copied location under the base', () => {
+  const assets = new Set(['/c/img/pic.png', '/c/guide/files/a.pdf']);
+  const opts = { base: '/docs/', assets, contentDir: '/c', warn: () => {} };
+  const html = '<p><img src="./img/pic.png" alt="p"><a href="files/a.pdf">pdf</a><img src="https://e.dev/x.png"></p>';
+  assert.equal(rewriteLinks(html, '/c/getting-started.md', pages, opts),
+    '<p><img src="/docs/img/pic.png" alt="p"><a href="files/a.pdf">pdf</a><img src="https://e.dev/x.png"></p>');
+  assert.equal(rewriteLinks('<img src="../img/pic.png"><a href="files/a.pdf?x=1#y">f</a>', '/c/guide/setup.mdx', pages, opts),
+    '<img src="/docs/img/pic.png"><a href="/docs/guide/files/a.pdf?x=1#y">f</a>');
+});
+
+test('a relative image that does not exist in content warns and is left alone', () => {
+  const warnings = [];
+  const out = rewriteLinks('<img src="./missing.png">', from, pages, { assets: new Set(), contentDir: '/c', warn: (m) => warnings.push(m) });
+  assert.equal(out, '<img src="./missing.png">');
+  assert.match(warnings[0], /getting-started\.md: image \.\/missing\.png was not found in content/);
+});

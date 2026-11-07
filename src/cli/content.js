@@ -12,16 +12,21 @@ const humanize = (s) => {
 const slugSegment = (s) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-// shortcut: frontmatter supports flat `key: value` lines only, upgrade if nested YAML is needed.
-function parseFrontmatter(src) {
-  const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  if (!m) return { data: {}, body: src };
+// shortcut: frontmatter supports flat single-line `key: value` pairs only, upgrade if nested YAML is needed.
+function parseFrontmatter(src, file) {
+  const text = src.replace(/^\uFEFF/, '');
+  // The empty block is its own alternative, tried first, or the lazy group would run on to a later `---` rule.
+  const m = text.match(/^---[ \t]*\r?\n(?:---[ \t]*(?:\r?\n|$)|([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$))/);
+  if (!m) return { data: {}, body: text };
   const data = {};
-  for (const line of m[1].split(/\r?\n/)) {
+  for (const line of (m[1] ?? '').split(/\r?\n/)) {
     const kv = line.match(/^([A-Za-z_-]+):\s*(.*)$/);
-    if (kv) data[kv[1]] = kv[2].replace(/^["']|["']$/g, '');
+    if (!kv) continue;
+    const [, key, raw] = kv;
+    if (/^[>|[{]/.test(raw)) throw new Error(`${file}: frontmatter "${key}" must be a single-line value (found "${raw[0]}")`);
+    data[key] = raw.replace(/^(["'])(.*)\1$/, '$2');
   }
-  return { data, body: src.slice(m[0].length) };
+  return { data, body: text.slice(m[0].length) };
 }
 
 function firstHeading(body) {
@@ -53,13 +58,13 @@ function firstParagraph(body) {
   }
 }
 
-async function walk(dir) {
+async function walk(dir, keep = (name) => /\.mdx?$/.test(name)) {
   const out = [];
   for (const e of await readdir(dir, { withFileTypes: true })) {
     if (e.name.startsWith('.') || e.name === 'node_modules') continue;
     const p = join(dir, e.name);
-    if (e.isDirectory()) out.push(...(await walk(p)));
-    else if (/\.mdx?$/.test(e.name)) out.push(p);
+    if (e.isDirectory()) out.push(...(await walk(p, keep)));
+    else if (keep(e.name)) out.push(p);
   }
   return out;
 }
@@ -75,12 +80,16 @@ export async function scanContent(dir) {
   for (const file of files.sort()) {
     const rel = relative(dir, file).split(sep);
     const stem = basename(rel.pop(), extname(file));
-    const segs = [...rel, ...(stem === 'index' ? [] : [stem])].map(slugSegment).filter(Boolean);
+    const names = [...rel, ...(stem === 'index' ? [] : [stem])];
+    const segs = names.map(slugSegment);
+    if (segs.some((seg) => !seg)) {
+      throw new Error(`cannot derive a URL from "${relative(dir, file).split(sep).join('/')}": file and folder names need at least one ASCII letter or digit`);
+    }
     const slug = segs.join('/');
     if (seen.has(slug)) throw new Error(`slug collision on "/${slug}": ${seen.get(slug)} and ${file}`);
     seen.set(slug, file);
 
-    const { data, body } = parseFrontmatter(await readFile(file, 'utf8'));
+    const { data, body } = parseFrontmatter(await readFile(file, 'utf8'), file);
     const order = data.order !== undefined && !Number.isNaN(Number(data.order)) ? Number(data.order) : undefined;
     pages.push({
       slug, file,
@@ -120,4 +129,9 @@ export function buildNav(pages) {
   const home = top.findIndex((n) => n.href === '/');
   if (home > 0) top.unshift(...top.splice(home, 1));
   return top;
+}
+
+/** Absolute paths of every non-Markdown file in content (images, PDFs, ...). Copied to dist at the same relative path. */
+export async function scanAssets(dir) {
+  return (await walk(dir, (name) => !/\.mdx?$/.test(name))).sort();
 }

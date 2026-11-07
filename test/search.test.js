@@ -38,3 +38,16 @@ test('loadPagefind imports once from the base path and sets the base url', async
   assert.deepEqual(imported, ['/docs/pagefind/pagefind.js']);
   assert.deepEqual(options, [{ baseUrl: '/docs/' }]);
 });
+
+test('a failed load is not cached: the next call retries', async () => {
+  let calls = 0;
+  const importer = async () => {
+    calls += 1;
+    if (calls === 1) throw new Error('network blip');
+    return { options: async () => {}, search: async () => ({ results: [] }) };
+  };
+  await assert.rejects(loadPagefind('/retry/', importer), /network blip/);
+  const pf = await loadPagefind('/retry/', importer);
+  assert.equal(typeof pf.search, 'function');
+  assert.equal(calls, 2);
+});

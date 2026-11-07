@@ -14,7 +14,7 @@ npx beacon build      # writes dist/
 npx beacon dev        # live reload at http://127.0.0.1:4321
 ```
 
-Requires Node 22.2 or newer. Install it where your user can write (a project devDependency is fine): Astro writes generated files next to the bundled site, so a read-only install fails with a clear message. Search is built by `beacon build`; the dev server has no search.
+Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Install it where your user can write (a project devDependency is fine): Astro writes generated files next to the bundled site, so a read-only install fails with a clear message. Search is built by `beacon build`; the dev server has no search.
 
 ## Config
 
@@ -33,6 +33,8 @@ Requires Node 22.2 or newer. Install it where your user can write (a project dev
 - Title falls back to the first `# heading`, then the file name. Description falls back to the first paragraph.
 - The sidebar follows the folder structure. `order` sorts within a folder; ties sort alphabetically. `index.md` is the folder's own page.
 - Relative links between pages (`./install.md#linux`) are rewritten. A link to a file outside `content/` is rendered as plain text with a build warning.
+- Images: `![alt](./img/pic.png)` in Markdown is handled by Astro (optimized, hashed, lazy-loaded). Any other file in `content/` (PDFs, raw `<img>` tags, downloads) is copied to the same relative path in `dist/`, and relative links to it are rewritten so they work from any page. A relative image that does not exist is reported as a build warning.
+- File and folder names need at least one ASCII letter or digit (`日本語.md` is a build error, not a wrong URL). Frontmatter supports single-line `key: value` pairs only.
 - In `.mdx`, these components need no import: `<Callout type="note|tip|warning|danger" title="...">`, `<Steps>` wrapping an ordered list, and `<Tabs>` with `<Tab label="...">` children. Without JavaScript all tab panels are shown.
 
 ## Performance budgets (gzipped, measured)

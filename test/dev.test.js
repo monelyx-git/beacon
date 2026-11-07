@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -65,6 +65,26 @@ test('dev can serve the bundled client scripts to the browser', async () => {
     const res = await fetch(`${server.url}/@fs${script}`);
     assert.equal(res.status, 200);
     assert.match(await res.text(), /handleCopyClick/);
+  } finally {
+    await server.stop();
+  }
+});
+
+test('dev serves files and raw images from content', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'beacon-dev-'));
+  await cp(fixture, root, { recursive: true, filter: (src) => !src.includes('/dist') });
+  await mkdir(join(root, 'content/img'), { recursive: true });
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  await writeFile(join(root, 'content/img/pic.png'), png);
+  await writeFile(join(root, 'content/guide/pic.md'), '# Pic\n\n<img src="../img/pic.png" alt="raw">\n');
+  const server = await dev(root, { port: await freePort() });
+  try {
+    const page = await (await fetch(`${server.url}/guide/pic/`)).text();
+    assert.match(page, /<img src="\/img\/pic\.png" alt="raw">/);
+    const res = await fetch(`${server.url}/img/pic.png`);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'image/png');
+    assert.equal((await res.arrayBuffer()).byteLength, png.length);
   } finally {
     await server.stop();
   }
