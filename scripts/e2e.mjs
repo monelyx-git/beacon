@@ -63,6 +63,8 @@ const hidden = () => ev(`JSON.stringify([...document.querySelectorAll('[data-tab
 
 await send('Runtime.enable'); await send('Page.enable');
 await send('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'], origin });
+// Headless Chrome defaults to a phone-width window, where the sidebar toggle is hidden by design.
+await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
 await send('Page.navigate', { url: `${origin}/tabs/` });
 
 check('tabs hydrate into a tablist', await waitFor(`document.querySelectorAll('[role=tab]').length === 2`));
@@ -79,6 +81,14 @@ check('clipboard holds the code', (await ev(`navigator.clipboard.readText()`)) =
 const dark = await ev(`document.documentElement.classList.contains('dark')`);
 await click('.theme-toggle');
 check('theme toggle flips the theme and stores it', (await ev(`document.documentElement.classList.contains('dark')`)) !== dark && (await ev(`localStorage.getItem('beacon-theme')`)) === (dark ? 'light' : 'dark'));
+
+await click('.copy-page');
+check('copy page confirms and copies the Markdown', (await waitFor(`document.querySelector('.copy-page').textContent === 'Copied'`)) && (await ev(`navigator.clipboard.readText()`)).startsWith('# '));
+
+await click('.sidebar-toggle');
+check('sidebar toggle hides the sidebar and stores it', (await waitFor(`getComputedStyle(document.querySelector('.sidebar')).visibility === 'hidden'`)) && (await ev(`localStorage.getItem('beacon-sidebar')`)) === 'hidden');
+await send('Page.navigate', { url: `${origin}/tabs/` });
+check('a hidden sidebar stays hidden after a reload', await waitFor(`document.documentElement.classList.contains('sidebar-hidden') && document.querySelector('.sidebar-toggle')?.getAttribute('aria-expanded') === 'false'`));
 
 check('search code is not loaded before it is opened', !(await ev(`performance.getEntriesByType('resource').some((r) => r.name.includes('pagefind') || r.name.includes('search-mount'))`)));
 const mod = process.platform === 'darwin' ? 4 : 2;

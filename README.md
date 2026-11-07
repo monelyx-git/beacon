@@ -26,6 +26,8 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 | `title` | no | Site name. Default `Docs`. |
 | `accent` | no | Accent color as `#rrggbb`. Default is Pier's orange. Must have at least 3:1 contrast against both theme backgrounds. |
 | `logo` | no | Path to an image in your project, shown in the sidebar. A `.html` file is inlined as-is instead, so you can build the whole brand (icon plus wordmark). Use inline `style` or a `<style>` tag; there are no utility classes, and theme colors are available as CSS variables. |
+| `editUrl` | no | Where your docs are edited, for example `https://github.com/acme/docs/edit/main/docs`. Adds an "Edit this page" link per page: this URL plus the file's path inside `content/`. |
+| `collapsibleSidebar` | no | `true` makes every sidebar group collapsible (open on the branch holding the current page). Default `false`. |
 | `favicon` | no | Path to an icon in your project (`.svg`, `.png` or `.ico`), used as the browser tab icon. |
 
 ## Content
@@ -39,6 +41,13 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 - Images: `![alt](./img/pic.png)` in Markdown is handled by Astro (optimized, hashed, lazy-loaded). Any other file in `content/` (PDFs, raw `<img>` tags, downloads) is copied to the same relative path in `dist/`, and relative links to it are rewritten so they work from any page. A relative image that does not exist is reported as a build warning.
 - File and folder names need at least one ASCII letter or digit (`日本語.md` is a build error, not a wrong URL). Frontmatter supports single-line `key: value` pairs only.
 - In `.mdx`, these components need no import: `<Callout type="note|tip|warning|danger" title="...">`, `<Steps>` wrapping an ordered list, and `<Tabs>` with `<Tab label="...">` children. Without JavaScript all tab panels are shown.
+
+## Reading features
+
+- **Copy page**: every page has a "Copy page" button that copies its Markdown. The same Markdown is published at `/<slug>.md` (`/index.md` for the home page): the source without frontmatter, with the title added as `# heading` when the body has none. `.mdx` is exported as written, components included.
+- **`llms.txt`**: the build writes `/llms.txt`, a list of every page's Markdown URL with its description, grouped by language when there are several.
+- **Hide the sidebar**: a button, or `[`, hides and shows it; the choice is remembered. Below 1024px the sidebar is already a plain block, so this does nothing there.
+- **Previous / next** links, `#` links on headings, and subtle motion that is switched off by the OS "reduce motion" setting.
 
 ## Languages
 
@@ -59,9 +68,9 @@ content/es/install.md    ->  /es/install/
 
 | State | JS | CSS |
 |---|---|---|
-| Reading page | under 30 KB (about 2 KB) | under 20 KB (about 2.6 KB) |
+| Reading page | under 30 KB (about 2.4 KB) | under 20 KB (about 3.3 KB) |
 | Page with tabs | under 30 KB (about 11 KB) | |
-| Search open (page without tabs) | under 36 KB (about 34 KB; Pagefind's runtime is most of it) | |
+| Search open (page without tabs) | under 36 KB (about 35.4 KB; Pagefind's runtime is most of it) | |
 | Search open on a page with tabs | about 41 KB (not budgeted: the tabs runtime loads too) | |
 
 Lighthouse is 100 for performance, accessibility and SEO. `node scripts/measure-budget.mjs <dist> <page> [--search-open]` and `node scripts/lighthouse.mjs <dist> <paths...>` check this; `node scripts/e2e.mjs` runs the browser checks (needs Chrome).
