@@ -147,3 +147,64 @@ test('files and raw images in content are copied and linked from any page; Markd
   assert.match(home, /<a href="\/docs\/files\/a\.pdf">Download<\/a>/);
   assert.match(await readFile(join(dir, 'dist/guide/a/index.html'), 'utf8'), /<img src="\/docs\/img\/pic\.png" alt="rawnested">/);
 });
+
+async function site(files, siteUrl = 'https://x.dev') {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-root-'));
+  await writeFile(join(dir, 'beacon.config.json'), JSON.stringify({ site: siteUrl }));
+  for (const [name, body] of Object.entries(files)) {
+    await mkdir(join(dir, 'content', name, '..'), { recursive: true });
+    await writeFile(join(dir, 'content', name), body);
+  }
+  return dir;
+}
+
+test('without a root index, / redirects to the first sidebar page and stays out of sitemap and search', async () => {
+  const dir = await site({ 'b.md': '# B\n\nSecond page text.\n', 'a.md': '# A\n\nFirst page text.\n' });
+  const { redirect } = await build(dir);
+  assert.equal(redirect, '/a/');
+  const html = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(html, /<meta http-equiv="refresh" content="0; url=\/a\/"/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/x\.dev\/a\/"/);
+  assert.match(html, /<meta name="robots" content="noindex"/);
+  assert.match(html, /<a href="\/a\/">/);
+  assert.doesNotMatch(html, /data-pagefind-body/);
+  const sitemap = await readFile(join(dir, 'dist/sitemap.xml'), 'utf8');
+  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).sort(), ['https://x.dev/a/', 'https://x.dev/b/']);
+  const entry = JSON.parse(await readFile(join(dir, 'dist/pagefind/pagefind-entry.json'), 'utf8'));
+  assert.equal(entry.languages.en.page_count, 2);
+});
+
+test('the root redirect respects the base path and descends into nested groups', async () => {
+  const dir = await site({ 'guide/deep/x.md': '# X\n\nNested.\n' }, 'https://x.dev/docs');
+  await build(dir);
+  const html = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(html, /content="0; url=\/docs\/guide\/deep\/x\/"/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/x\.dev\/docs\/guide\/deep\/x\/"/);
+  assert.match(html, /<a href="\/docs\/guide\/deep\/x\/">/);
+});
+
+test('a site whose only page is the root index gets no redirect page', async () => {
+  const dir = await site({ 'index.md': '# Home\n\nWelcome.\n' });
+  const { redirect } = await build(dir);
+  assert.equal(redirect, null);
+  const html = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(html, /<h1[^>]*>Home<\/h1>/);
+  assert.doesNotMatch(html, /http-equiv="refresh"/);
+});
+
+test('the CLI prints which page / redirects to', async () => {
+  const dir = await site({ 'a.md': '# A\n\nHello there.\n' });
+  const r = spawnSync('node', [bin, 'build', '--root', dir], { encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /beacon: no root index\.md; \/ redirects to \/a\//);
+  assert.equal(r.stderr, '');
+});
+
+test('the redirect URL is HTML-attribute-escaped', async () => {
+  const dir = await site({ 'a.md': '# A\n\nHello there.\n' }, 'https://x.dev/p&q');
+  await build(dir);
+  const html = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(html, /content="0; url=\/p&amp;q\/a\/"/);
+  assert.match(html, /<a href="\/p&amp;q\/a\/">/);
+  assert.doesNotMatch(html, /url=\/p&q/);
+});
