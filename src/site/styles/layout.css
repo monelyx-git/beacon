@@ -90,3 +90,5 @@ html.sidebar-hidden .sidebar-toggle { left: .75rem; transform: scaleX(-1); }
 .pager a { display: flex; flex-direction: column; text-decoration: none; }
 .pager small { color: var(--muted-foreground); }
 .pager .next { align-items: flex-end; margin-left: auto; }
+.anchor { margin-left: .4em; color: var(--muted-foreground); text-decoration: none; opacity: 0; }
+.prose :is(h2, h3, h4):hover .anchor, .anchor:focus-visible { opacity: 1; }

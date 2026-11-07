@@ -31,3 +31,9 @@ test('pages end with a pager in the page language', async () => {
   assert.doesNotMatch(await read('index.html'), /<small>Previous<\/small>/);
   assert.doesNotMatch(await read('404.html'), /class="pager"/);
 });
+
+test('anchors do not enter the search text or the TOC', async () => {
+  const html = await read('guide/intro/index.html');
+  assert.match(html, /<h2 id="why">Why<a class="anchor"[^>]*data-pagefind-ignore>#<\/a><\/h2>/);
+  assert.match(html, /<a href="#why">Why<\/a>/);
+});

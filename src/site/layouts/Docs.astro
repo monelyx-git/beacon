@@ -11,6 +11,7 @@ import { config, navs, locales, pages, assets, contentDir } from 'virtual:beacon
 import { themeScript } from '../lib/theme-script.js';
 import { rewriteLinks } from '../../cli/links.js';
 import { wrapCodeBlocks } from '../lib/code-blocks.js';
+import { anchorHeadings } from '../lib/anchors.js';
 import { siblings, trail, withBase } from '../lib/nav.js';
 import { t } from '../lib/strings.js';
 import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
@@ -28,7 +29,7 @@ const heading = page.title;
 const description = page.description ?? config.title;
 const canonical = `${config.site}${href}`;
 const title = heading === config.title ? heading : `${heading} · ${config.title}`;
-const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }), s);
+const body = anchorHeadings(wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }), s), s.anchor);
 ---
 <!doctype html>
 <html lang={locale} style={accent}>
