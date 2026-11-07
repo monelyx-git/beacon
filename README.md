@@ -25,7 +25,7 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 | `site` | yes | Absolute URL where the docs are served, for example `https://docs.example.com` or `https://example.com/docs`. Used for canonical links, Open Graph and the sitemap. |
 | `title` | no | Site name. Default `Docs`. |
 | `accent` | no | Accent color as `#rrggbb`. Default is Pier's orange. Must have at least 3:1 contrast against both theme backgrounds. |
-| `logo` | no | Path to an image in your project, shown in the sidebar. |
+| `logo` | no | Path to an image in your project, shown in the sidebar. A `.html` file is inlined as-is instead, so you can build the whole brand (icon plus wordmark). Use inline `style` or a `<style>` tag; there are no utility classes, and theme colors are available as CSS variables. |
 | `favicon` | no | Path to an icon in your project (`.svg`, `.png` or `.ico`), used as the browser tab icon. |
 
 ## Content

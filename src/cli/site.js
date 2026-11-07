@@ -1,4 +1,5 @@
 import { accessSync, constants, createReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
@@ -13,6 +14,12 @@ const RESOLVED = `\0${VIRTUAL}`;
 /** Config, pages and nav for a project. Throws the user-facing config or content error. */
 export async function loadSite(root) {
   const config = await loadConfig(root);
+  // An .html logo is the author's own markup, inlined in the sidebar instead of served as an image.
+  // shortcut: dev reads it once per start, restart to see edits.
+  if (/\.html?$/i.test(config.logo ?? '')) {
+    config.logoHtml = await readFile(join(root, config.logo), 'utf8');
+    delete config.logo;
+  }
   const contentDir = join(root, 'content');
   const pages = await scanContent(contentDir);
   const nav = buildNav(pages);

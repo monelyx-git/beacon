@@ -226,3 +226,15 @@ test('build emits a 404.html with the site chrome that is noindex and out of sit
   assert.equal(entry.languages.en.page_count, 2);
   assert.doesNotMatch(await readFile(join(dir, 'dist/a/index.html'), 'utf8'), /name="robots"/);
 });
+
+test('an .html logo is inlined in the sidebar instead of an img', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-logo-html-'));
+  await mkdir(join(dir, 'content'));
+  await writeFile(join(dir, 'beacon.config.json'), JSON.stringify({ site: 'https://x.dev', title: 'Pier', logo: 'brand.html' }));
+  await writeFile(join(dir, 'brand.html'), '<span class="mark"><svg width="34" height="34"></svg>pier</span>');
+  await writeFile(join(dir, 'content/a.md'), '# A\n\nHello there.\n');
+  await build(dir);
+  const html = await readFile(join(dir, 'dist/a/index.html'), 'utf8');
+  assert.match(html, /<a class="brand"[^>]*aria-label="Pier"[^>]*><span class="mark">/);
+  assert.doesNotMatch(html, /brand\.html/);
+});
