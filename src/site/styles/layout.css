@@ -43,3 +43,15 @@
   content: counter(step); position: absolute; left: 0; top: .1rem; display: grid; place-items: center;
   width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--bx-accent); color: var(--primary-foreground); font-size: .875rem; font-weight: 700;
 }
+.sidebar { position: sticky; }
+.theme-toggle { position: absolute; top: 1rem; right: 1rem; width: 2rem; height: 2rem; border: 1px solid var(--sidebar-active); border-radius: .375rem; background: transparent; color: var(--sidebar-foreground); cursor: pointer; }
+.code-block { position: relative; margin: 1rem 0; }
+.code-block pre { margin: 0; }
+.copy { position: absolute; top: .5rem; right: .5rem; padding: .15rem .5rem; border: 0; border-radius: .25rem; background: #30363d; color: #e1e4e8; font: inherit; font-size: .75rem; cursor: pointer; }
+.copy:hover { background: #3d444d; }
+.tab-label { margin: 0 0 .25rem; font-weight: 700; }
+.tab-panel[hidden] { display: none; }
+.tabs[data-ready] .tab-label { display: none; }
+.tabs [role='tablist'] { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); }
+.tabs [role='tab'] { padding: .4rem .9rem; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted-foreground); font: inherit; cursor: pointer; }
+.tabs [role='tab'][aria-selected='true'] { color: var(--foreground); border-bottom-color: var(--bx-accent); }

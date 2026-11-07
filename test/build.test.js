@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, rm, mkdtemp, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, rm, mkdtemp, writeFile, mkdir, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -79,4 +79,9 @@ test('a site with a path prefix keeps links, canonical and sitemap under it', as
   assert.match(html, /<a href="\/docs\/a\/">to a<\/a>/);
   assert.match(html, /<nav[^>]*aria-label="Documentation"[\s\S]*href="\/docs\/a\/"/);
   assert.match(await readFile(join(dir, 'dist/sitemap.xml'), 'utf8'), /<loc>https:\/\/x\.dev\/docs\/a\/<\/loc>/);
+});
+
+test('the Astro cache lives in the project, never shared between projects', async () => {
+  await build(fixture);
+  assert.ok((await stat(join(fixture, 'node_modules/.cache/beacon'))).isDirectory());
 });

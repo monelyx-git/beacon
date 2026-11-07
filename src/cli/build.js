@@ -1,9 +1,9 @@
 import { copyFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build as astroBuild } from 'astro';
 import mdx from '@astrojs/mdx';
+import preact from '@astrojs/preact';
 import { loadConfig } from './config.js';
 import { scanContent, buildNav } from './content.js';
 
@@ -38,12 +38,12 @@ export async function build(root) {
     srcDir: join(pkgRoot, 'src/site'),
     publicDir: join(pkgRoot, 'src/site/public'),
     outDir,
-    cacheDir: join(tmpdir(), 'beacon-cache'),
+    cacheDir: join(root, 'node_modules/.cache/beacon'),
     configFile: false,
     site: siteUrl.origin,
     base: siteUrl.pathname,
     logLevel: 'warn',
-    integrations: [mdx()],
+    integrations: [mdx(), preact()],
     vite: { plugins: [beaconModule({ ...config, logo }, pages, nav)], logLevel: 'warn' },
   });
   if (config.logo) await copyFile(join(root, config.logo), join(outDir, basename(config.logo)));

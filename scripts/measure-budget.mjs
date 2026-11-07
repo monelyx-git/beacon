@@ -27,7 +27,11 @@ export async function measure(dist, page = 'index.html') {
   for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
     const src = m[1].match(/\bsrc="([^"]+)"/)?.[1];
     if (src) await countJs(src);
-    else if (m[2].trim()) { out.js += gz(m[2]); out.inlineScript += m[2].length; }
+    else if (m[2].trim()) {
+      out.js += gz(m[2]);
+      // The 1 KB inline budget is for the theme script (the spec); bundler-inlined page scripts count toward JS only.
+      if (/getItem\(['"`]beacon-theme/.test(m[2])) out.inlineScript += m[2].length;
+    }
   }
   // Island JS is fetched via attributes on <astro-island>, not <script src>.
   for (const m of html.matchAll(/<astro-island\b[^>]*>/g)) {

@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { measure } from '../scripts/measure-budget.mjs';
 
+const theme = "var t=localStorage.getItem('beacon-theme');";
+
 test('measure counts external and inline JS and CSS gzipped', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'beacon-budget-'));
   await mkdir(join(dir, '_astro'));
@@ -15,11 +17,11 @@ test('measure counts external and inline JS and CSS gzipped', async () => {
   await writeFile(join(dir, '_astro/a.css'), css);
   await writeFile(join(dir, 'index.html'),
     '<html><head><link rel="stylesheet" href="/_astro/a.css"><style>b{color:blue}</style>' +
-    '<script>var t=1;</script><script type="module" src="/_astro/a.js"></script></head></html>');
+    `<script>${theme}</script><script type="module" src="/_astro/a.js"></script></head></html>`);
   const r = await measure(dir, 'index.html');
-  assert.equal(r.js, gzipSync(js).length + gzipSync('var t=1;').length);
+  assert.equal(r.js, gzipSync(js).length + gzipSync(theme).length);
   assert.equal(r.css, gzipSync(css).length + gzipSync('b{color:blue}').length);
-  assert.equal(r.inlineScript, 'var t=1;'.length);
+  assert.equal(r.inlineScript, theme.length);
 });
 
 test('measure counts island JS loaded through astro-island attributes and its static imports', async () => {
@@ -35,4 +37,14 @@ test('measure counts island JS loaded through astro-island attributes and its st
     '<astro-island component-url="/_astro/island.js" renderer-url="/_astro/client.js"></astro-island>');
   const r = await measure(dir, 'index.html');
   assert.equal(r.js, gzipSync(island).length + gzipSync(renderer).length + gzipSync(react).length);
+});
+
+test('inlineScript is the theme script only; other inline scripts count toward JS', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-budget-'));
+  const boot = 'customElements.define("astro-island",class{});' + 'z'.repeat(5000);
+  const other = "localStorage.setItem('beacon-theme','dark');"; // the toggle shares the key but is not the theme script
+  await writeFile(join(dir, 'index.html'), `<script>${boot}</script><script>${other}</script><script>${theme}</script>`);
+  const r = await measure(dir, 'index.html');
+  assert.equal(r.inlineScript, theme.length);
+  assert.equal(r.js, gzipSync(boot).length + gzipSync(other).length + gzipSync(theme).length);
 });

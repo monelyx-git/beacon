@@ -2,6 +2,8 @@
 import Docs from '../layouts/Docs.astro';
 import Callout from '../components/Callout.astro';
 import Steps from '../components/Steps.astro';
+import Tabs from '../components/Tabs.astro';
+import Tab from '../components/Tab.astro';
 import { pages } from 'virtual:beacon';
 
 export function getStaticPaths() {
@@ -15,4 +17,4 @@ const headings = all.filter((h) => h.depth === 2 || h.depth === 3);
 // The layout renders the title as h1 unless the content brings its own.
 const ownH1 = all.some((h) => h.depth === 1);
 ---
-<Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps }} /></Docs>
+<Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps, Tabs, Tab }} /></Docs>
