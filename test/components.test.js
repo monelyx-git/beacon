@@ -1,6 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from '../src/cli/build.js';
 import { measure, BUDGET } from '../scripts/measure-budget.mjs';
@@ -43,4 +44,25 @@ test('code blocks get a copy button and every page a theme toggle', async () => 
   const html = await page('tabs');
   assert.match(html, /<div class="code-block"><pre class="astro-code[\s\S]*<button type="button" class="copy"/);
   assert.match(html, /<button[^>]*class="theme-toggle"[^>]*aria-label="Toggle theme"/);
+});
+
+// Lives here, not in its own file: Astro builds in parallel test files race on the shared .astro/ folder.
+const mdx = (word) => `# ${word}\n\n<Callout>Body.</Callout>\n\n<Tabs>\n<Tab label="a">\n\nA\n\n</Tab>\n<Tab label="b">\n\nB\n\n</Tab>\n</Tabs>\n`;
+
+test('content components use the page language for their default labels', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-i18n-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await mkdir(join(dir, 'content/es'), { recursive: true });
+  await writeFile(join(dir, 'beacon.config.json'), JSON.stringify({ site: 'https://docs.example.com', title: 'X', locales: ['en', 'es'] }));
+  await writeFile(join(dir, 'content/index.mdx'), mdx('Home'));
+  await writeFile(join(dir, 'content/es/index.mdx'), mdx('Inicio'));
+  await build(dir);
+
+  const es = await readFile(join(dir, 'dist/es/index.html'), 'utf8');
+  assert.match(es, /<aside class="callout callout-note" role="note" aria-label="Nota">\s*<p class="callout-title">Nota<\/p>/);
+  assert.match(es, /<astro-island[^>]*props="[^"]*label[^"]*Opciones/);
+
+  const en = await readFile(join(dir, 'dist/index.html'), 'utf8');
+  assert.match(en, /<p class="callout-title">Note<\/p>/);
+  assert.doesNotMatch(en, /<astro-island[^>]*props="[^"]*label/);
 });

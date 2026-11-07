@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { nextTab } from '../lib/tabs-logic.js';
 
 // Panels arrive as static HTML (all visible without JS); this island builds the tab list and hides inactive panels.
-export default function TabsIsland({ children }) {
+export default function TabsIsland({ children, label = 'Options' }) {
   const id = useId();
   const panelsRef = useRef(null);
   const buttons = useRef([]);
@@ -31,7 +31,7 @@ export default function TabsIsland({ children }) {
   return (
     <div class="tabs" data-ready={labels.length ? '' : undefined}>
       {labels.length > 0 && (
-        <div role="tablist" aria-label="Options" onKeyDown={onKeyDown}>
+        <div role="tablist" aria-label={label} onKeyDown={onKeyDown}>
           {labels.map((label, i) => (
             <button type="button" role="tab" key={label} ref={(el) => (buttons.current[i] = el)}
               id={`${id}-tab-${i}`} aria-selected={i === active} aria-controls={`${id}-panel-${i}`}

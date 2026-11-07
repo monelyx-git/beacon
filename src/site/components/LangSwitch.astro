@@ -1,0 +1,11 @@
+---
+import { withBase } from '../lib/nav.js';
+import { t } from '../lib/strings.js';
+
+/** @type {{links: {code: string, href: string, current: boolean}[]}} */
+const { links } = Astro.props;
+const s = t(links.find((l) => l.current)?.code);
+---
+<nav class="lang-switch" aria-label={s.language}>
+  {links.map((l) => <a href={withBase(l.href)} hreflang={l.code} lang={l.code} aria-current={l.current ? 'true' : undefined}>{l.code}</a>)}
+</nav>

@@ -6,14 +6,20 @@ import '../styles/base.css';
 import '../styles/layout.css';
 import Sidebar from '../components/Sidebar.astro';
 import Toc from '../components/Toc.astro';
-import { config, nav, pages, assets, contentDir } from 'virtual:beacon';
+import LangSwitch from '../components/LangSwitch.astro';
+import { config, navs, locales, pages, assets, contentDir } from 'virtual:beacon';
 import { themeScript } from '../lib/theme-script.js';
 import { rewriteLinks } from '../../cli/links.js';
 import { wrapCodeBlocks } from '../lib/code-blocks.js';
 import { trail, withBase } from '../lib/nav.js';
+import { t } from '../lib/strings.js';
+import { alternates, homeHref, switcherLinks } from '../../cli/locales.js';
 
 const { page, headings, showTitle, notFound = false } = Astro.props;
 const href = page.slug ? `/${page.slug}/` : '/';
+const { locale } = page;
+const s = t(locale);
+const nav = navs[locale];
 const crumbs = trail(nav, href).slice(0, -1);
 // Only override Pier's own (theme-aware) accent when the config changes it.
 const accent = config.accent !== '#d2441c' ? `--beacon-accent:${config.accent}` : undefined;
@@ -21,10 +27,10 @@ const heading = page.title;
 const description = page.description ?? config.title;
 const canonical = `${config.site}${href}`;
 const title = heading === config.title ? heading : `${heading} · ${config.title}`;
-const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }));
+const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), page.file, pages, { base: import.meta.env.BASE_URL, assets: new Set(assets), contentDir }), s);
 ---
 <!doctype html>
-<html lang="en" style={accent}>
+<html lang={locale} style={accent}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,6 +38,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     {config.favicon && <link rel="icon" href={withBase(config.favicon)} />}
     <meta name="description" content={description} />
     {notFound ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {alternates(pages, page, locales).map((a) => <link rel="alternate" hreflang={a.hreflang} href={config.site + a.href} />)}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={config.title} />
     <meta property="og:title" content={heading} />
@@ -46,23 +53,24 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     <div class="shell">
       <aside class="sidebar">
         <div class="sidebar-head">
-          <a class="brand" href={withBase('/')} aria-label={config.logoHtml ? config.title : undefined}>
+          <a class="brand" href={withBase(homeHref(locale, locales))} aria-label={config.logoHtml ? config.title : undefined}>
             {config.logoHtml ? <Fragment set:html={config.logoHtml} /> : <>
               {config.logo && <img src={withBase(config.logo)} alt="" width="24" height="24" />}
               <span>{config.title}</span>
             </>}
           </a>
-          <button type="button" class="theme-toggle" aria-label="Toggle theme">◐</button>
+          {locales.length > 1 && <LangSwitch links={switcherLinks(pages, page, locales)} />}
+          <button type="button" class="theme-toggle" aria-label={s.toggleTheme}>◐</button>
         </div>
-        <button type="button" class="search-open" aria-label="Search" aria-keyshortcuts="Control+K Meta+K">Search <kbd>⌘K</kbd></button>
-        <nav aria-label="Documentation"><Sidebar nodes={nav} current={href} /></nav>
+        <button type="button" class="search-open" aria-label={s.search} aria-keyshortcuts="Control+K Meta+K">{s.search} <kbd>⌘K</kbd></button>
+        <nav aria-label={s.navLabel}><Sidebar nodes={nav} current={href} /></nav>
       </aside>
       <main class="content" data-pagefind-body={notFound ? undefined : ''}>
         {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
         {showTitle && <h1>{heading}</h1>}
         <article class="prose" set:html={body} />
       </main>
-      <Toc headings={headings} />
+      <Toc headings={headings} label={s.toc} />
     </div>
     <script>
       import { handleCopyClick } from '../lib/copy.js';

@@ -1,4 +1,9 @@
 ---
 import TabsIsland from './TabsIsland.jsx';
+import { STRINGS, t } from '../lib/strings.js';
+
+const { tabs } = t(Astro.locals.locale);
+// Only a non-English label becomes an island prop, so English pages serialize the same props as before.
+const props = tabs === STRINGS.en.tabs ? {} : { label: tabs };
 ---
-<TabsIsland client:idle><slot /></TabsIsland>
+<TabsIsland client:idle {...props}><slot /></TabsIsland>

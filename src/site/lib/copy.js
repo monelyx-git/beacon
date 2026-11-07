@@ -5,9 +5,9 @@ export async function handleCopyClick(event, clipboard, schedule) {
   const text = button.closest('.code-block').querySelector('pre').textContent;
   try {
     await clipboard.writeText(text);
-    button.textContent = 'Copied';
+    button.textContent = button.dataset?.copied ?? 'Copied';
   } catch {
-    button.textContent = 'Copy failed';
+    button.textContent = button.dataset?.failed ?? 'Copy failed';
   }
-  schedule(() => { button.textContent = 'Copy'; }, 2000);
+  schedule(() => { button.textContent = button.dataset?.copy ?? 'Copy'; }, 2000);
 }

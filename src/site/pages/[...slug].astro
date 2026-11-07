@@ -5,18 +5,21 @@ import Steps from '../components/Steps.astro';
 import Tabs from '../components/Tabs.astro';
 import Tab from '../components/Tab.astro';
 import RootRedirect from '../components/RootRedirect.astro';
-import { pages, redirect } from 'virtual:beacon';
+import { pages, redirect, locales, localeRedirects } from 'virtual:beacon';
 
 export function getStaticPaths() {
   const paths = pages.map((page) => ({ params: { slug: page.slug || undefined }, props: { page } }));
-  return redirect ? [...paths, { params: { slug: undefined }, props: { redirect } }] : paths;
+  const roots = localeRedirects.map((r) => ({ params: { slug: r.slug }, props: { redirect: r.to, locale: r.slug } }));
+  return redirect ? [...paths, { params: { slug: undefined }, props: { redirect, locale: locales[0] } }, ...roots] : [...paths, ...roots];
 }
 
-const { page, redirect: to } = Astro.props;
+const { page, redirect: to, locale } = Astro.props;
+// Content components (Callout, Tabs) read the page language from here; they get no page props.
+Astro.locals.locale = page?.locale ?? locale;
 const { Content, getHeadings } = page ? await page.load() : {};
 const all = page ? getHeadings() : [];
 const headings = all.filter((h) => h.depth === 2 || h.depth === 3);
 // The layout renders the title as h1 unless the content brings its own.
 const ownH1 = all.some((h) => h.depth === 1);
 ---
-{to ? <RootRedirect to={to} /> : <Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps, Tabs, Tab }} /></Docs>}
+{to ? <RootRedirect to={to} locale={locale} /> : <Docs page={page} headings={headings} showTitle={!ownH1}><Content components={{ Callout, Steps, Tabs, Tab }} /></Docs>}

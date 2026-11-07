@@ -34,6 +34,20 @@ test('low-contrast accent is rejected', async () => {
   await assert.rejects(loadConfig(await project({ site: 'https://a.dev', accent: '#f3f5f5' })), /"accent".*contrast/);
 });
 
+test('locales is returned as is', async () => {
+  const cfg = await loadConfig(await project({ site: 'https://a.dev', locales: ['en', 'es'] }));
+  assert.deepEqual(cfg.locales, ['en', 'es']);
+});
+
+test('absent locales leaves no locales key', async () => {
+  const cfg = await loadConfig(await project({ site: 'https://a.dev' }));
+  assert.equal('locales' in cfg, false);
+});
+
+test('invalid locales names the field', async () => {
+  await assert.rejects(loadConfig(await project({ site: 'https://a.dev', locales: ['EN'] })), /"locales"/);
+});
+
 test('missing config file is a clear error', async () => {
   await assert.rejects(loadConfig(await project()), /no beacon\.config\.\(js\|mjs\|json\) found/);
 });
