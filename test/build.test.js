@@ -104,3 +104,14 @@ test('a real page with search open stays inside the search-open JS budget', asyn
   const { js } = await measure(join(fixture, 'dist'), 'guide/intro/index.html', { searchOpen: true });
   assert.ok(js <= BUDGET.jsSearchOpen, `search-open JS ${js} B gz (budget ${BUDGET.jsSearchOpen})`);
 });
+
+test('a configured logo is copied into dist and used in the sidebar', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'beacon-logo-'));
+  await mkdir(join(dir, 'content'));
+  await writeFile(join(dir, 'beacon.config.json'), JSON.stringify({ site: 'https://x.dev', logo: 'brand.svg' }));
+  await writeFile(join(dir, 'brand.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+  await writeFile(join(dir, 'content/a.md'), '# A\n\nHello there.\n');
+  await build(dir);
+  assert.match(await readFile(join(dir, 'dist/brand.svg'), 'utf8'), /<svg/);
+  assert.match(await readFile(join(dir, 'dist/a/index.html'), 'utf8'), /<img src="\/brand\.svg"/);
+});
