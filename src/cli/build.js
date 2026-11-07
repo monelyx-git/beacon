@@ -10,6 +10,9 @@ export async function build(root) {
   const config = astroConfig(root, site);
   await astroBuild(config);
   await buildSearchIndex(config.outDir);
+  for (const [code, rels] of Object.entries(site.missing)) {
+    console.warn(`beacon: "${code}" is missing translations for: ${rels.map((r) => (r ? `/${r}/` : '/')).join(', ')}`);
+  }
   // Images and files in content/ keep their relative path, which is what the rewritten links point at.
   for (const asset of site.assets) {
     const dest = join(config.outDir, relative(site.contentDir, asset));

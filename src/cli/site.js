@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import preact from '@astrojs/preact';
 import { loadConfig } from './config.js';
-import { scanAssets, scanContent, buildNav, rootRedirect } from './content.js';
+import { scanAssets, scanContent, rootRedirect } from './content.js';
+import { assignLocales, homeHref, missingTranslations, navFor } from './locales.js';
 
 const pkgRoot = fileURLToPath(new URL('../../', import.meta.url));
 const VIRTUAL = 'virtual:beacon';
@@ -21,18 +22,30 @@ export async function loadSite(root) {
     delete config.logo;
   }
   const contentDir = join(root, 'content');
-  const pages = await scanContent(contentDir);
-  const nav = buildNav(pages);
-  return { config, pages, nav, redirect: rootRedirect(nav), assets: await scanAssets(contentDir), contentDir };
+  const locales = config.locales ?? ['en'];
+  const pages = assignLocales(await scanContent(contentDir), config.locales);
+  const navs = Object.fromEntries(locales.map((code) => [code, navFor(pages, code, locales)]));
+  const nav = navs[locales[0]];
+  // A non-default locale without its own home page redirects its root to its first page, like `/` does.
+  const localeRedirects = locales.slice(1).flatMap((code) => {
+    const to = rootRedirect(navs[code], homeHref(code, locales));
+    return to ? [{ slug: code, to }] : [];
+  });
+  return {
+    config, pages, nav, navs, locales, localeRedirects, missing: missingTranslations(pages, locales),
+    redirect: rootRedirect(nav), assets: await scanAssets(contentDir), contentDir,
+  };
 }
 
-const moduleSource = ({ config, pages, nav, redirect, assets, contentDir }) => `
+const moduleSource = ({ config, pages, navs, locales, localeRedirects, redirect, assets, contentDir }) => `
   export const assets = ${JSON.stringify(assets)};
   export const contentDir = ${JSON.stringify(contentDir)};
   export const config = ${JSON.stringify({ ...config, logo: config.logo ? `/${basename(config.logo)}` : undefined, favicon: config.favicon ? `/${basename(config.favicon)}` : undefined })};
-  export const nav = ${JSON.stringify(nav)};
+  export const navs = ${JSON.stringify(navs)};
+  export const locales = ${JSON.stringify(locales)};
+  export const localeRedirects = ${JSON.stringify(localeRedirects)};
   export const redirect = ${JSON.stringify(redirect)};
-  export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, file: p.file, title: p.title, description: p.description })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
+  export const pages = [${pages.map((p) => `{ ...${JSON.stringify({ slug: p.slug, file: p.file, title: p.title, description: p.description, locale: p.locale, rel: p.rel })}, load: () => import(${JSON.stringify(p.file)}) }`).join(',')}];
 `;
 
 /** Exposes config, pages and nav to the bundled site as one virtual module; in dev it rescans on content changes. */

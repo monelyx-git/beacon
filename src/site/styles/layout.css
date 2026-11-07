@@ -45,6 +45,9 @@
   width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--bx-accent); color: var(--primary-foreground); font-size: .875rem; font-weight: 700;
 }
 .sidebar { position: sticky; }
+.lang-switch { display: flex; margin-left: auto; }
+.sidebar .lang-switch a { padding: .25rem .375rem; font-size: .75rem; text-transform: uppercase; }
+.sidebar .lang-switch a[aria-current] { color: var(--sidebar-foreground); font-weight: 700; }
 .theme-toggle { flex: none; width: 2rem; height: 2rem; border: 1px solid var(--sidebar-active); border-radius: .375rem; background: transparent; color: var(--sidebar-foreground); cursor: pointer; }
 .code-block { position: relative; margin: 1rem 0; }
 .code-block pre { margin: 0; }

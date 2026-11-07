@@ -1,12 +1,13 @@
 ---
 import { config } from 'virtual:beacon';
 import { withBase } from '../lib/nav.js';
+import { t } from '../lib/strings.js';
 
-const { to } = Astro.props;
+const { to, locale } = Astro.props;
 const url = withBase(to);
 ---
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,7 +17,7 @@ const url = withBase(to);
     <meta name="robots" content="noindex" />
   </head>
   <body>
-    <p>Redirecting to <a href={url}>{url}</a>…</p>
+    <p>{t(locale).redirecting} <a href={url}>{url}</a>…</p>
     <script is:inline define:vars={{ url }}>location.replace(url);</script>
   </body>
 </html>

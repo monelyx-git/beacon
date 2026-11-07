@@ -1,9 +1,9 @@
 ---
-const { headings } = Astro.props;
+const { headings, label } = Astro.props;
 ---
 {headings.length > 0 && (
-  <nav aria-label="On this page" class="toc">
-    <p class="toc-title">On this page</p>
+  <nav aria-label={label} class="toc">
+    <p class="toc-title">{label}</p>
     <ul>
       {headings.map((h) => <li class={`d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}
     </ul>
