@@ -26,6 +26,7 @@ Requires Node 22.2 or newer. Tested on macOS and Linux; Windows is untested. Ins
 | `title` | no | Site name. Default `Docs`. |
 | `accent` | no | Accent color as `#rrggbb`. Default is Pier's orange. Must have at least 3:1 contrast against both theme backgrounds. |
 | `logo` | no | Path to an image in your project, shown in the sidebar. |
+| `favicon` | no | Path to an icon in your project (`.svg`, `.png` or `.ico`), used as the browser tab icon. |
 
 ## Content
 

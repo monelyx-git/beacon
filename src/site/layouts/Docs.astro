@@ -29,6 +29,7 @@ const body = wrapCodeBlocks(rewriteLinks(await Astro.slots.render('default'), pa
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {config.favicon && <link rel="icon" href={withBase(config.favicon)} />}
     <meta name="description" content={description} />
     {notFound ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
