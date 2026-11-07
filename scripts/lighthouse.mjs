@@ -26,9 +26,15 @@ for (const path of paths.length ? paths : ['/']) {
   const r = await run('pnpm', ['exec', 'lighthouse', `http://localhost:${port}${path}`, '--quiet', '--output=json', '--output-path=stdout',
     '--only-categories=performance,accessibility,seo', '--chrome-flags=--headless=new --no-sandbox'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 120000 }).catch((e) => ({ failure: e }));
   if (r.failure) { console.error(r.failure.stderr || r.failure.message); failed = true; continue; }
-  const cats = JSON.parse(r.stdout).categories;
+  const report = JSON.parse(r.stdout);
+  const cats = report.categories;
+  const failing = Object.values(cats).flatMap((c) => c.auditRefs).map((a) => report.audits[a.id]).filter((a) => a.score !== null && a.score < 1 && a.scoreDisplayMode !== 'informative');
   const scores = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, Math.round(v.score * 100)]));
   console.log(path, JSON.stringify(scores));
+  for (const a of new Set(failing)) {
+    console.log(`  - ${a.id}: ${a.title}`);
+    for (const i of (Array.isArray(a.details?.items) ? a.details.items : []).slice(0, 2)) if (i.node?.snippet) console.log(`      ${i.node.snippet.slice(0, 140)} ${i.node.explanation?.split('\n')[1] ?? ''}`);
+  }
   if (Object.values(scores).some((s) => s < 100)) failed = true;
 }
 server.close();

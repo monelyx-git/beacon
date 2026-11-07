@@ -1,5 +1,5 @@
 *, *::before, *::after { box-sizing: border-box; }
-html { color-scheme: light; --accent: var(--beacon-accent, var(--primary)); }
+html { color-scheme: light; --bx-accent: var(--beacon-accent, var(--primary)); }
 html.dark { color-scheme: dark; }
 body {
   margin: 0;
@@ -8,6 +8,8 @@ body {
   font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 h1, h2, h3 { line-height: 1.2; font-family: system-ui, sans-serif; }
-a { color: var(--accent); }
+a { color: var(--bx-accent); }
 code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* github-dark comments (#6a737d) are 3:1 on the code background; lighten to pass 4.5:1. */
+.astro-code span[style*='#6A737D'] { color: #959da5 !important; }
