@@ -1,0 +1,21 @@
+{
+  "name": "@monelyx/beacon",
+  "version": "0.0.0",
+  "description": "Minimal static documentation generator for the Monelyx ecosystem.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "beacon": "bin/beacon.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.1.3",
+    "astro": "^7"
+  }
+}
