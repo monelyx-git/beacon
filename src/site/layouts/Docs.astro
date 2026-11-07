@@ -1,0 +1,43 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/layout.css';
+import Sidebar from '../components/Sidebar.astro';
+import Toc from '../components/Toc.astro';
+import { config, nav } from 'virtual:beacon';
+import { trail, withBase } from '../lib/nav.js';
+
+const { page, headings, showTitle } = Astro.props;
+const href = page.slug ? `/${page.slug}/` : '/';
+const crumbs = trail(nav, href).slice(0, -1);
+// Only override Pier's own (theme-aware) accent when the config changes it.
+const accent = config.accent !== '#d2441c' ? `--beacon-accent:${config.accent}` : undefined;
+const heading = page.title;
+---
+<!doctype html>
+<html lang="en" style={accent}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{heading === config.title ? heading : `${heading} · ${config.title}`}</title>
+    {page.description && <meta name="description" content={page.description} />}
+    <script is:inline>document.documentElement.classList.toggle('dark', matchMedia('(prefers-color-scheme: dark)').matches);</script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href={withBase('/')}>
+          {config.logo && <img src={withBase(config.logo)} alt="" width="24" height="24" />}
+          <span>{config.title}</span>
+        </a>
+        <nav aria-label="Documentation"><Sidebar nodes={nav} current={href} /></nav>
+      </aside>
+      <main class="content">
+        {crumbs.length > 0 && <p class="crumbs">{crumbs.map((c) => c.label).join(' / ')}</p>}
+        {showTitle && <h1>{heading}</h1>}
+        <article class="prose"><slot /></article>
+      </main>
+      <Toc headings={headings} />
+    </div>
+  </body>
+</html>

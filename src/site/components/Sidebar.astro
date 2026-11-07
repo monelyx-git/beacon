@@ -1,0 +1,12 @@
+---
+import { withBase } from '../lib/nav.js';
+const { nodes, current } = Astro.props;
+---
+<ul>
+  {nodes.map((n) => (
+    <li>
+      {n.href ? <a href={withBase(n.href)} aria-current={n.href === current ? 'page' : undefined}>{n.label}</a> : <span class="group">{n.label}</span>}
+      {n.children.length > 0 && <Astro.self nodes={n.children} current={current} />}
+    </li>
+  ))}
+</ul>
