@@ -30,3 +30,16 @@
   .sidebar { position: static; height: auto; }
   .toc { display: none; }
 }
+.toc a[aria-current] { color: var(--bx-accent); font-weight: 600; }
+.callout { margin: 1.25rem 0; padding: .75rem 1rem; border-left: 4px solid var(--info); border-radius: .375rem; background: var(--info-soft); color: var(--info-soft-foreground); }
+.callout-tip { border-color: var(--success); background: var(--success-soft); color: var(--success-soft-foreground); }
+.callout-warning { border-color: var(--warning); background: var(--warning-soft); color: var(--warning-soft-foreground); }
+.callout-danger { border-color: var(--danger); background: var(--danger-soft); color: var(--danger-soft-foreground); }
+.callout-title { margin: 0 0 .25rem; font-weight: 700; }
+.callout-body > :last-child { margin-bottom: 0; }
+.steps ol { list-style: none; counter-reset: step; padding-left: 0; }
+.steps li { position: relative; counter-increment: step; margin: 0 0 1rem; padding-left: 2.5rem; }
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: .1rem; display: grid; place-items: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--bx-accent); color: var(--primary-foreground); font-size: .875rem; font-weight: 700;
+}

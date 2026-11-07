@@ -1,0 +1,8 @@
+---
+const { type = 'note', title } = Astro.props;
+const labels = { note: 'Note', info: 'Info', tip: 'Tip', warning: 'Warning', danger: 'Danger' };
+---
+<aside class={`callout callout-${type}`} role="note" aria-label={title ?? labels[type]}>
+  <p class="callout-title">{title ?? labels[type]}</p>
+  <div class="callout-body"><slot /></div>
+</aside>
