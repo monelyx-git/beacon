@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { scanContent, buildNav } from '../src/cli/content.js';
+import { scanContent, buildNav, rootRedirect } from '../src/cli/content.js';
 
 async function tree(files) {
   const dir = await mkdtemp(join(tmpdir(), 'beacon-content-'));
@@ -112,4 +112,20 @@ test('frontmatter: an empty block and a BOM do not swallow or hide content', asy
 test('a file or folder name with no ASCII letters or digits is a clear error, not a wrong URL', async () => {
   await assert.rejects(scanContent(await tree({ '日本語.md': '# JP\n' })), /cannot derive a URL from "日本語\.md"/);
   await assert.rejects(scanContent(await tree({ '日本語/intro.md': '# JP\n' })), /cannot derive a URL from "日本語\/intro\.md"/);
+});
+
+test('rootRedirect: null when a root index exists, else the first sidebar page with an href', async () => {
+  const withIndex = await scanContent(await tree({ 'index.md': '# Home', 'a.md': '# A' }));
+  assert.equal(rootRedirect(buildNav(withIndex)), null);
+  const flat = await scanContent(await tree({ 'b.md': '# B', 'a.md': '# A' }));
+  assert.equal(rootRedirect(buildNav(flat)), '/a/');
+  const ordered = await scanContent(await tree({ 'a.md': '# A', 'b.md': '---\norder: 1\n---\n# B' }));
+  assert.equal(rootRedirect(buildNav(ordered)), '/b/');
+});
+
+test('rootRedirect: descends into groups that have no page of their own', async () => {
+  const pages = await scanContent(await tree({ 'guide/deep/x.md': '# X', 'guide/y.md': '# Y', 'z.md': '# Z' }));
+  assert.equal(rootRedirect(buildNav(pages)), '/guide/deep/x/');
+  const onlyNested = await scanContent(await tree({ 'guide/deep/x.md': '# X' }));
+  assert.equal(rootRedirect(buildNav(onlyNested)), '/guide/deep/x/');
 });
