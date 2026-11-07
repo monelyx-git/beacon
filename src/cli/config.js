@@ -2,8 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseLocales } from './locales.js';
 
-/** @typedef {{site: string, title: string, accent: string, logo?: string, favicon?: string}} BeaconConfig */
+/** @typedef {{site: string, title: string, accent: string, logo?: string, favicon?: string, locales?: string[]}} BeaconConfig */
 
 export const DEFAULT_ACCENT = '#d2441c';
 // Theme backgrounds from the vendored Pier tokens (light, dark).
@@ -43,5 +44,7 @@ export async function loadConfig(root) {
   const low = BACKGROUNDS.find((bg) => contrast(accent, bg) < MIN_CONTRAST);
   if (low) throw new Error(`beacon.config: "accent" ${accent} has contrast below ${MIN_CONTRAST}:1 against ${low}`);
 
-  return { site: raw.site.replace(/\/+$/, ''), title: raw.title ?? 'Docs', accent, ...(raw.logo ? { logo: raw.logo } : {}), ...(raw.favicon ? { favicon: raw.favicon } : {}) };
+  const locales = raw.locales === undefined ? undefined : parseLocales(raw.locales);
+
+  return { site: raw.site.replace(/\/+$/, ''), title: raw.title ?? 'Docs', accent, ...(raw.logo ? { logo: raw.logo } : {}), ...(raw.favicon ? { favicon: raw.favicon } : {}), ...(locales ? { locales } : {}) };
 }
