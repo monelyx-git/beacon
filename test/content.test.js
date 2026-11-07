@@ -68,3 +68,16 @@ test('root index.md leads the sidebar and folder index keeps its children', asyn
   assert.deepEqual(nav.map((n) => n.href ?? n.label), ['/', '/a/', '/guide/']);
   assert.deepEqual(nav[2].children.map((c) => c.href), ['/guide/x/']);
 });
+
+test('description: frontmatter wins, otherwise the first paragraph as plain text', async () => {
+  const pages = bySlug(await scanContent(await tree({
+    'a.md': '---\ndescription: From FM\n---\n# A\n\nBody.\n',
+    'b.md': '# B\n\n```sh\nnope\n```\n\nFrom a **clean** server to [a deployed app](./x.md). About `10` minutes\nonce DNS has propagated.\n\nSecond paragraph.\n',
+    'c.md': '# C\n\n| a | b |\n|---|---|\n| 1 | 2 |\n',
+    'd.md': '# D\n\n' + 'word '.repeat(80) + '\n',
+  })));
+  assert.equal(pages['a'].description, 'From FM');
+  assert.equal(pages['b'].description, 'From a clean server to a deployed app. About 10 minutes once DNS has propagated.');
+  assert.equal(pages['c'].description, undefined);
+  assert.ok(pages['d'].description.length <= 160 && pages['d'].description.endsWith('…'));
+});

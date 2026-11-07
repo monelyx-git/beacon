@@ -33,6 +33,26 @@ function firstHeading(body) {
   }
 }
 
+const NOT_PROSE = /^(#|\||>|<|[-*+] |\d+\. |!\[|:::|import |export )/;
+
+// Plain text of the first prose paragraph, for pages without a frontmatter description.
+function firstParagraph(body) {
+  let fence = false, block = [];
+  const lines = [...body.split(/\r?\n/), ''];
+  for (const line of lines) {
+    if (/^\s*(```|~~~)/.test(line)) { fence = !fence; block = ['<skip>']; continue; }
+    if (fence) continue;
+    if (line.trim()) { block.push(line.trim()); continue; }
+    if (block.length && !NOT_PROSE.test(block[0]) && block[0] !== '<skip>') {
+      const text = block.join(' ')
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/[`*]|__/g, '').replace(/\s+/g, ' ').trim();
+      return text.length <= 160 ? text : `${text.slice(0, 159).replace(/\s+\S*$/, '')}…`;
+    }
+    block = [];
+  }
+}
+
 async function walk(dir) {
   const out = [];
   for (const e of await readdir(dir, { withFileTypes: true })) {
@@ -65,7 +85,7 @@ export async function scanContent(dir) {
     pages.push({
       slug, file,
       title: data.title || firstHeading(body) || humanize(slug ? slug.split('/').pop() : 'Home'),
-      ...(data.description ? { description: data.description } : {}),
+      ...((data.description || firstParagraph(body)) ? { description: data.description || firstParagraph(body) } : {}),
       ...(order !== undefined ? { order } : {}),
     });
   }
