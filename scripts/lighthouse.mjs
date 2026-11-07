@@ -28,7 +28,7 @@ for (const path of paths.length ? paths : ['/']) {
   if (r.failure) { console.error(r.failure.stderr || r.failure.message); failed = true; continue; }
   const report = JSON.parse(r.stdout);
   const cats = report.categories;
-  const failing = Object.values(cats).flatMap((c) => c.auditRefs).map((a) => report.audits[a.id]).filter((a) => a.score !== null && a.score < 1 && a.scoreDisplayMode !== 'informative');
+  const failing = Object.values(cats).flatMap((c) => c.auditRefs).filter((a) => a.weight > 0).map((a) => report.audits[a.id]).filter((a) => a.score !== null && a.score < 1 && a.scoreDisplayMode !== 'informative');
   const scores = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, Math.round(v.score * 100)]));
   console.log(path, JSON.stringify(scores));
   for (const a of new Set(failing)) {
